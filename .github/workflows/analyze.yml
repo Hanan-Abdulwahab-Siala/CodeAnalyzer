@@ -24,7 +24,7 @@ jobs:
           test -f analyzer.py
           test -f model_service.py
           test -f requirements.txt
-          test -f input/sample.py
+          test -f input/sample.txt
 
           echo "Repository structure is OK."
 
