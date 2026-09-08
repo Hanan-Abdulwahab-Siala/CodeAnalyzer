@@ -1,6 +1,9 @@
+
 name: Mamba Code Analyzer
 
 on:
+  workflow_dispatch:
+
   push:
     paths:
       - "analyze.py"
