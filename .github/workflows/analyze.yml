@@ -3,7 +3,7 @@ name: Mamba Code Analyzer
 on:
   push:
     paths:
-      - "analyzer.py"
+      - "analyze.py"
       - "model_service.py"
       - "requirements.txt"
       - "input/**"
@@ -21,7 +21,7 @@ jobs:
         run: |
           echo "Checking repository..."
 
-          test -f analyzer.py
+          test -f analyze.py
           test -f model_service.py
           test -f requirements.txt
           test -f input/sample.txt
@@ -30,7 +30,7 @@ jobs:
 
       - name: Check Python files
         run: |
-          python -m py_compile analyzer.py
+          python -m py_compile analyze.py
           python -m py_compile model_service.py
 
           echo "Python syntax is OK."
