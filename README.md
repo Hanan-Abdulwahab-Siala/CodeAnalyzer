@@ -4,7 +4,7 @@ A code-analysis system based on a Mamba fine-tuned language model.
 
 ## Components
 
-- `analyzer.py` - command-line analysis entry point
+- `analyze.py` - command-line analysis entry point
 - `model_service.py` - model loading and inference
 - `input/` - submitted code samples
 - `output/` - generated analysis results
@@ -13,4 +13,4 @@ A code-analysis system based on a Mamba fine-tuned language model.
 ## Usage
 
 ```bash
-python analyzer.py input/sample.py
+python analyze.py input/sample.txt
