@@ -1,1 +1,42 @@
+name: Mamba Code Analyzer
 
+on:
+  push:
+    paths:
+      - "analyzer.py"
+      - "model_service.py"
+      - "requirements.txt"
+      - "input/**"
+      - ".github/workflows/**"
+
+jobs:
+  preparation-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check repository structure
+        run: |
+          echo "Checking repository..."
+
+          test -f analyzer.py
+          test -f model_service.py
+          test -f requirements.txt
+          test -f input/sample.py
+
+          echo "Repository structure is OK."
+
+      - name: Check Python files
+        run: |
+          python -m py_compile analyzer.py
+          python -m py_compile model_service.py
+
+          echo "Python syntax is OK."
+
+      - name: Show files
+        run: |
+          find . -maxdepth 3 -type f \
+            ! -path "./.git/*" \
+            | sort
