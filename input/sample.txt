@@ -1,0 +1,5 @@
+switch x {
+  case c1 : s1; break; 
+  case c2 : s2; break;
+  case c3 : s3; break;
+}
