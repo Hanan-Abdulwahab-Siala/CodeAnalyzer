@@ -87,3 +87,10 @@ jobs:
           cat output/output.txt
 
           echo "----------------------------------------"          
+
+      - name: Upload analysis output
+        uses: actions/upload-artifact@v4
+        with:
+          name: mamba-analysis-output
+          path: output/output.txt
+          if-no-files-found: error
