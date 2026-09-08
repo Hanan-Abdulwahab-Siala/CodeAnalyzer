@@ -56,3 +56,13 @@ jobs:
           find . -maxdepth 3 -type f \
             ! -path "./.git/*" \
             | sort
+
+      - name: Check input file
+        run: |
+          echo "Input file:"
+          echo "----------------------------------------"
+
+          cat input/sample.txt
+
+          echo "----------------------------------------"
+          echo "Input file was read successfully."
