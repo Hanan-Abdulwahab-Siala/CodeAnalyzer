@@ -1,8 +1,5 @@
-torch
 transformers
 peft
 accelerate
-bitsandbytes
 sentencepiece
 safetensors
-huggingface_hub
