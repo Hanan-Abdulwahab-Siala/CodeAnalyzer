@@ -66,3 +66,24 @@ jobs:
 
           echo "----------------------------------------"
           echo "Input file was read successfully."
+
+      - name: Create test output
+        run: |
+          mkdir -p output
+
+          echo "Mamba Code Analyzer" > output/output.txt
+          echo "========================================" >> output/output.txt
+          echo "" >> output/output.txt
+          echo "Test workflow completed successfully." >> output/output.txt
+          echo "Input file: input/sample.txt" >> output/output.txt
+
+          echo "Test output created."
+
+      - name: Display test output
+        run: |
+          echo "Generated output:"
+          echo "----------------------------------------"
+
+          cat output/output.txt
+
+          echo "----------------------------------------"          
