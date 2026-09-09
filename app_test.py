@@ -16,45 +16,162 @@ OUTPUT_FILE = os.path.join(
 
 
 # ============================================================
+# READ UPLOADED FILE
+# ============================================================
+
+def read_uploaded_file(
+    uploaded_file
+):
+
+    # --------------------------------------------------------
+    # NO FILE
+    # --------------------------------------------------------
+
+    if uploaded_file is None:
+
+        return ""
+
+
+    # --------------------------------------------------------
+    # READ FILE
+    # --------------------------------------------------------
+
+    try:
+
+        with open(
+
+            uploaded_file,
+
+            "r",
+
+            encoding="utf-8"
+
+        ) as file:
+
+            content = file.read()
+
+
+        return content
+
+
+    except Exception as e:
+
+        return (
+            f"ERROR READING FILE:\n"
+            f"{e}"
+        )
+
+
+# ============================================================
 # TEST ANALYSIS FUNCTION
 #
-# This does NOT load Mistral.
-# This does NOT require a GPU.
+# This function does NOT load Mistral.
+# This function does NOT require a GPU.
 # It only tests the Gradio interface.
 # ============================================================
 
 def test_analyze_code(
-    code,
+
+    uploaded_file,
+
+    pasted_code,
+
     model_version,
+
     model_type
+
 ):
+
+    # --------------------------------------------------------
+    # DETERMINE INPUT SOURCE
+    # --------------------------------------------------------
+
+    code = ""
+
+    input_source = ""
+
+
+    # --------------------------------------------------------
+    # PRIORITY 1:
+    # UPLOADED FILE
+    # --------------------------------------------------------
+
+    if uploaded_file is not None:
+
+        try:
+
+            with open(
+
+                uploaded_file,
+
+                "r",
+
+                encoding="utf-8"
+
+            ) as file:
+
+                code = file.read()
+
+
+            input_source = (
+                "Uploaded File"
+            )
+
+
+        except Exception as e:
+
+            return (
+
+                f"ERROR: Could not read "
+                f"uploaded file.\n\n"
+                f"Reason: {e}",
+
+                None
+            )
+
+
+    # --------------------------------------------------------
+    # PRIORITY 2:
+    # PASTED CODE
+    # --------------------------------------------------------
+
+    elif pasted_code is not None:
+
+        if pasted_code.strip():
+
+            code = (
+                pasted_code
+            )
+
+            input_source = (
+                "Manual Text Input"
+            )
+
 
     # --------------------------------------------------------
     # CHECK INPUT
     # --------------------------------------------------------
 
-    if code is None:
-
-        return (
-            "ERROR: No code was provided.",
-            None
-        )
-
-
     if not code.strip():
 
         return (
-            "ERROR: Code input is empty.",
+
+            "ERROR: No code was provided.\n\n"
+            "Please either:\n"
+            "- Upload a code file, or\n"
+            "- Paste code into the text box.",
+
             None
         )
 
 
     # --------------------------------------------------------
-    # CREATE DEMO OUTPUT
+    # CREATE TEST OUTPUT
     # --------------------------------------------------------
 
     final_output = f"""
 ========================================
+MAMBA CODE ANALYZER
 GRADIO INTERFACE TEST
 ========================================
 
@@ -64,11 +181,22 @@ No GPU was used.
 
 No Mistral model was loaded.
 
-Selected configuration:
+No LoRA model was loaded.
 
-Model Type: {model_type}
+No real AI inference was performed.
 
-Model Version: {model_version}
+========================================
+SELECTED CONFIGURATION
+========================================
+
+Model Type:
+{model_type}
+
+Model Version:
+{model_version}
+
+Input Source:
+{input_source}
 
 ========================================
 INPUT CODE
@@ -80,17 +208,16 @@ INPUT CODE
 TEST RESULT
 ========================================
 
-The following interface components worked:
+The following components were tested:
 
 - Model Type selection
 - Model Version selection
-- Code input
+- File upload
+- Manual code input
 - Analyze button
 - Output display
-- Output file creation
-- Download file
-
-The real AI inference was NOT executed.
+- output/output.txt creation
+- Output file download
 
 ========================================
 """
@@ -101,7 +228,9 @@ The real AI inference was NOT executed.
     # --------------------------------------------------------
 
     os.makedirs(
+
         OUTPUT_DIRECTORY,
+
         exist_ok=True
     )
 
@@ -111,12 +240,17 @@ The real AI inference was NOT executed.
     # --------------------------------------------------------
 
     with open(
+
         OUTPUT_FILE,
+
         "w",
+
         encoding="utf-8"
+
     ) as file:
 
         file.write(
+
             final_output
         )
 
@@ -126,7 +260,9 @@ The real AI inference was NOT executed.
     # --------------------------------------------------------
 
     return (
+
         final_output,
+
         OUTPUT_FILE
     )
 
@@ -136,7 +272,9 @@ The real AI inference was NOT executed.
 # ============================================================
 
 with gr.Blocks(
+
     title="Mamba Code Analyzer - Interface Test"
+
 ) as demo:
 
 
@@ -145,19 +283,26 @@ with gr.Blocks(
     # --------------------------------------------------------
 
     gr.Markdown(
+
         """
 # Mamba Code Analyzer
 
 ## Gradio Interface Test Mode
 
-This version tests the interface only.
+This version allows you to test the complete interface
+without loading the AI model.
 
-- No GPU required
-- No Mistral model loaded
-- No LoRA model loaded
-- No real inference performed
+You can:
 
-You can test all menus and buttons.
+- Select the model type
+- Select the model version
+- Upload a code file
+- Paste code manually
+- Click Analyze Code
+- View the result
+- Download output/output.txt
+
+This test version does NOT require a GPU.
         """
     )
 
@@ -171,8 +316,11 @@ You can test all menus and buttons.
         model_type = gr.Dropdown(
 
             choices=[
+
                 "LoRA Adapter",
+
                 "Full Model"
+
             ],
 
             value="LoRA Adapter",
@@ -184,8 +332,11 @@ You can test all menus and buttons.
         model_version = gr.Dropdown(
 
             choices=[
+
                 "1",
+
                 "2"
+
             ],
 
             value="2",
@@ -195,12 +346,44 @@ You can test all menus and buttons.
 
 
     # --------------------------------------------------------
-    # CODE INPUT
+    # INPUT SECTION
     # --------------------------------------------------------
 
-    code_input = gr.Textbox(
+    gr.Markdown(
 
-        label="Mamba Code",
+        """
+## Input Code
+
+You can use either method:
+
+1. Upload a code file, OR
+2. Paste the code manually.
+
+If you provide both, the uploaded file
+will be used.
+        """
+    )
+
+
+    # --------------------------------------------------------
+    # FILE UPLOAD
+    # --------------------------------------------------------
+
+    uploaded_file = gr.File(
+
+        label="Upload Input Code File",
+
+        type="filepath"
+    )
+
+
+    # --------------------------------------------------------
+    # MANUAL CODE INPUT
+    # --------------------------------------------------------
+
+    pasted_code = gr.Textbox(
+
+        label="Or Paste Code Manually",
 
         placeholder=(
             "Paste your Mamba code here..."
@@ -223,7 +406,7 @@ You can test all menus and buttons.
 
 
     # --------------------------------------------------------
-    # RESULT
+    # RESULT OUTPUT
     # --------------------------------------------------------
 
     result_output = gr.Textbox(
@@ -237,12 +420,12 @@ You can test all menus and buttons.
 
 
     # --------------------------------------------------------
-    # DOWNLOAD FILE
+    # DOWNLOAD OUTPUT
     # --------------------------------------------------------
 
     output_file = gr.File(
 
-        label="Download Analysis Output"
+        label="Download Output File"
     )
 
 
@@ -255,14 +438,23 @@ You can test all menus and buttons.
         fn=test_analyze_code,
 
         inputs=[
-            code_input,
+
+            uploaded_file,
+
+            pasted_code,
+
             model_version,
+
             model_type
+
         ],
 
         outputs=[
+
             result_output,
+
             output_file
+
         ]
     )
 
