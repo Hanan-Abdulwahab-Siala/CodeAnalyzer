@@ -1,5 +1,4 @@
 import os
-
 import gradio as gr
 
 from model_service import (
@@ -14,19 +13,11 @@ from model_service import (
 # CONFIGURATION
 # ============================================================
 
-OUTPUT_DIRECTORY = (
-    "output"
-)
+OUTPUT_DIRECTORY = "output"
 
-
-OUTPUT_FILE = (
-
-    os.path.join(
-
-        OUTPUT_DIRECTORY,
-
-        "output.txt"
-    )
+OUTPUT_FILE = os.path.join(
+    OUTPUT_DIRECTORY,
+    "output.txt"
 )
 
 
@@ -34,54 +25,54 @@ OUTPUT_FILE = (
 # FORMAT TIME
 # ============================================================
 
-def format_time(
-    seconds
-):
+def format_time(seconds):
 
-    hours = int(
-        seconds // 3600
-    )
-
+    hours = int(seconds // 3600)
 
     minutes = int(
-
-        (
-            seconds % 3600
-        )
-
-        // 60
+        (seconds % 3600) // 60
     )
 
-
-    remaining_seconds = (
-
-        seconds % 60
-    )
-
+    remaining_seconds = seconds % 60
 
     result = ""
 
-
     if hours > 0:
-
-        result += (
-            f"{hours}h "
-        )
-
+        result += f"{hours}h "
 
     if minutes > 0 or hours > 0:
+        result += f"{minutes}m "
 
-        result += (
-            f"{minutes}m "
-        )
-
-
-    result += (
-        f"{remaining_seconds:.6f}s"
-    )
-
+    result += f"{remaining_seconds:.6f}s"
 
     return result
+
+
+# ============================================================
+# LOAD UPLOADED FILE
+# ============================================================
+
+def load_file(uploaded_file):
+
+    if uploaded_file is None:
+        return ""
+
+    try:
+
+        with open(
+            uploaded_file,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            return file.read()
+
+    except Exception as e:
+
+        return (
+            "# ERROR: Could not read file.\n\n"
+            f"# Reason: {e}"
+        )
 
 
 # ============================================================
@@ -89,14 +80,10 @@ def format_time(
 # ============================================================
 
 def analyze_code(
-
     code,
-
     model_version,
-
     model_type
 ):
-
 
     # --------------------------------------------------------
     # CHECK INPUT
@@ -105,30 +92,33 @@ def analyze_code(
     if code is None:
 
         return (
-
             "ERROR: No code was provided.",
-
             None
         )
-
 
     if not code.strip():
 
         return (
-
-            "ERROR: Code input is empty.",
-
+            "ERROR: Code input is empty.\n\n"
+            "Please upload a file or paste code.",
             None
         )
 
 
     # --------------------------------------------------------
-    # CONVERT MODEL VERSION
+    # MODEL VERSION
     # --------------------------------------------------------
 
-    version = int(
-        model_version
-    )
+    try:
+
+        version = int(model_version)
+
+    except Exception:
+
+        return (
+            "ERROR: Invalid model version.",
+            None
+        )
 
 
     # --------------------------------------------------------
@@ -138,20 +128,15 @@ def analyze_code(
     try:
 
         load_model(
-
             version=version,
-
             model_type=model_type
         )
-
 
     except Exception as e:
 
         return (
-
             "ERROR: Model loading failed.\n\n"
             f"Reason: {e}",
-
             None
         )
 
@@ -163,30 +148,17 @@ def analyze_code(
     try:
 
         (
-
             output,
-
             input_tokens,
-
             generated_tokens,
-
             inference_time
-
-        ) = (
-
-            GenerateInferenceOutput(
-                code
-            )
-        )
-
+        ) = GenerateInferenceOutput(code)
 
     except Exception as e:
 
         return (
-
             "ERROR: Inference failed.\n\n"
             f"Reason: {e}",
-
             None
         )
 
@@ -198,281 +170,177 @@ def analyze_code(
     if output is None:
 
         return (
-
-            "ERROR: Model did not return "
-            "a valid response.",
-
+            "ERROR: Model did not return a response.",
             None
         )
 
 
     # --------------------------------------------------------
-    # EXTRACT DICTIONARY
+    # EXTRACT RESULT
     # --------------------------------------------------------
 
     try:
 
-        output_dict = (
-
-            ExtractCleanDict(
-                output
-            )
-        )
-
+        output_dict = ExtractCleanDict(output)
 
     except Exception as e:
 
         return (
-
-            "ERROR: Could not extract "
-            "the result dictionary.\n\n"
-
+            "ERROR: Could not extract model result.\n\n"
             f"Reason: {e}\n\n"
-
             "Raw model output:\n\n"
-
             f"{output}",
-
             None
         )
 
 
     # --------------------------------------------------------
-    # FORMAT OUTPUT
+    # FORMAT RESULT
     # --------------------------------------------------------
 
-    formatted_output = (
-
-        FormatOutput(
-            output_dict
-        )
+    formatted_output = FormatOutput(
+        output_dict
     )
 
 
     # --------------------------------------------------------
-    # CALCULATE METRICS
+    # METRICS
     # --------------------------------------------------------
 
     if input_tokens > 0:
 
         time_per_input_token = (
-
-            inference_time
-
-            / input_tokens
+            inference_time / input_tokens
         )
-
 
     else:
 
-        time_per_input_token = (
-            0.0
-        )
+        time_per_input_token = 0.0
 
 
     if generated_tokens > 0:
 
         time_per_generated_token = (
-
-            inference_time
-
-            / generated_tokens
+            inference_time / generated_tokens
         )
-
 
     else:
 
-        time_per_generated_token = (
-            0.0
-        )
+        time_per_generated_token = 0.0
 
 
     # --------------------------------------------------------
-    # BUILD FINAL OUTPUT
+    # FINAL OUTPUT
     # --------------------------------------------------------
 
-    final_output = (
-
-        formatted_output
-    )
-
+    final_output = formatted_output
 
     final_output += (
-
+        "\n"
         "========================================\n"
-
-    )
-
-
-    final_output += (
-
         "Inference Metrics\n"
-
-    )
-
-
-    final_output += (
-
         "========================================\n"
-
     )
 
-
     final_output += (
-
-        f"Model type:                 "
-        f"{model_type}\n"
-
+        f"Model type:                 {model_type}\n"
     )
 
-
     final_output += (
-
-        f"Model version:              "
-        f"{version}\n"
-
+        f"Model version:              {version}\n"
     )
 
-
     final_output += (
-
-        f"Input tokens:               "
-        f"{input_tokens}\n"
-
+        f"Input tokens:               {input_tokens}\n"
     )
 
-
     final_output += (
-
-        f"Generated tokens:           "
-        f"{generated_tokens}\n"
-
+        f"Generated tokens:           {generated_tokens}\n"
     )
 
-
     final_output += (
-
         f"Inference time:             "
         f"{format_time(inference_time)}\n"
-
     )
 
-
     final_output += (
-
         f"Time per input token:       "
         f"{format_time(time_per_input_token)}\n"
-
     )
 
-
     final_output += (
-
         f"Time per generated token:   "
         f"{format_time(time_per_generated_token)}\n"
-
     )
 
-
     final_output += (
-
         "========================================\n"
-
     )
 
 
     # --------------------------------------------------------
-    # CREATE OUTPUT DIRECTORY
+    # SAVE OUTPUT
     # --------------------------------------------------------
 
     os.makedirs(
-
         OUTPUT_DIRECTORY,
-
         exist_ok=True
     )
 
-
-    # --------------------------------------------------------
-    # WRITE REAL OUTPUT FILE
-    # --------------------------------------------------------
-
     with open(
-
         OUTPUT_FILE,
-
         "w",
-
         encoding="utf-8"
-
     ) as file:
 
         file.write(
-
             final_output
         )
 
 
     # --------------------------------------------------------
-    # RETURN RESULT
-    #
-    # First value -> Gradio result box
-    # Second value -> downloadable output/output.txt
+    # RETURN TO GRADIO
     # --------------------------------------------------------
 
     return (
-
         final_output,
-
         OUTPUT_FILE
     )
 
 
 # ============================================================
-# GRADIO INTERFACE
+# GRADIO UI
 # ============================================================
 
 with gr.Blocks(
-
     title="Mamba Code Analyzer"
-
 ) as demo:
 
-
-    # --------------------------------------------------------
-    # TITLE
-    # --------------------------------------------------------
-
     gr.Markdown(
-
         """
 # Mamba Code Analyzer
 
-Select a model configuration, paste your Mamba code,
-and run the analysis.
+Upload a Mamba code file or paste code manually.
 
-The analysis result is displayed below and saved as:
+The model runs **locally on your computer**.
 
-`output/output.txt`
-        """
+Your code and model inference are not sent to
+my GPU or to a central inference server.
+"""
     )
 
 
     # --------------------------------------------------------
-    # MODEL CONFIGURATION
+    # MODEL SELECTION
     # --------------------------------------------------------
 
     with gr.Row():
 
-
         model_type = gr.Dropdown(
 
             choices=[
-
                 "LoRA Adapter",
-
                 "Full Model"
-
             ],
 
             value="LoRA Adapter",
@@ -484,17 +352,26 @@ The analysis result is displayed below and saved as:
         model_version = gr.Dropdown(
 
             choices=[
-
                 "1",
-
                 "2"
-
             ],
 
             value="2",
 
             label="Model Version"
         )
+
+
+    # --------------------------------------------------------
+    # FILE UPLOAD
+    # --------------------------------------------------------
+
+    uploaded_file = gr.File(
+
+        label="Upload Mamba Code File",
+
+        type="filepath"
+    )
 
 
     # --------------------------------------------------------
@@ -506,15 +383,30 @@ The analysis result is displayed below and saved as:
         label="Mamba Code",
 
         placeholder=(
-            "Paste your Mamba code here..."
+            "Upload a file or paste "
+            "your Mamba code here..."
         ),
 
-        lines=20
+        lines=25
     )
 
 
     # --------------------------------------------------------
-    # BUTTON
+    # LOAD FILE AUTOMATICALLY
+    # --------------------------------------------------------
+
+    uploaded_file.change(
+
+        fn=load_file,
+
+        inputs=uploaded_file,
+
+        outputs=code_input
+    )
+
+
+    # --------------------------------------------------------
+    # ANALYZE
     # --------------------------------------------------------
 
     analyze_button = gr.Button(
@@ -533,14 +425,14 @@ The analysis result is displayed below and saved as:
 
         label="Analysis Result",
 
-        lines=25,
+        lines=30,
 
         interactive=False
     )
 
 
     # --------------------------------------------------------
-    # DOWNLOAD FILE
+    # DOWNLOAD
     # --------------------------------------------------------
 
     output_file = gr.File(
@@ -560,27 +452,20 @@ The analysis result is displayed below and saved as:
         fn=analyze_code,
 
         inputs=[
-
             code_input,
-
             model_version,
-
             model_type
-
         ],
 
         outputs=[
-
             result_output,
-
             output_file
-
         ]
     )
 
 
 # ============================================================
-# ENTRY POINT
+# START
 # ============================================================
 
 if __name__ == "__main__":
