@@ -94,3 +94,9 @@ jobs:
           name: mamba-analysis-output
           path: output/output.txt
           if-no-files-found: error
+
+- name: Check Gradio application
+
+  run: |
+
+    python -m py_compile app_test.py
