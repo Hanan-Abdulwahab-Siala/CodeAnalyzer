@@ -193,6 +193,9 @@ BASE_MODEL = (
 model = None
 tokenizer = None
 
+loaded_version = None
+loaded_model_type = None
+
 
 # ============================================================
 # MODEL LOADING HELPER
