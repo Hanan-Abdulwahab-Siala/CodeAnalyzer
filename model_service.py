@@ -1,13 +1,16 @@
 import time
-import re
 import ast
 
 import torch
+
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM
 )
-from peft import PeftModel
+
+from peft import (
+    PeftModel
+)
 
 
 # ============================================================
@@ -15,10 +18,13 @@ from peft import PeftModel
 # ============================================================
 
 DEVICE = "cpu"
+
 DTYPE = torch.float32
 
 GPU_NAME = "CPU"
+
 GPU_CAPABILITY = None
+
 GPU_FAMILY = "CPU"
 
 
@@ -35,40 +41,41 @@ if torch.cuda.is_available():
     )
 
     GPU_MAJOR = GPU_CAPABILITY[0]
+
     GPU_MINOR = GPU_CAPABILITY[1]
 
     # --------------------------------------------------------
-    # A100 / Ampere
-    #
-    # A100 is generally compute capability sm_80.
+    # A100 / AMPERE
     # --------------------------------------------------------
 
     if GPU_MAJOR == 8:
 
-        GPU_FAMILY = "Ampere (A100 compatible)"
+        GPU_FAMILY = (
+            "Ampere (A100 compatible)"
+        )
 
     # --------------------------------------------------------
-    # B200 / Blackwell
-    #
-    # B200 systems can report sm_100.
+    # BLACKWELL
     # --------------------------------------------------------
 
     elif GPU_MAJOR >= 10:
 
-        GPU_FAMILY = "Blackwell (B200 compatible)"
+        GPU_FAMILY = (
+            "Blackwell (B200 compatible)"
+        )
 
     # --------------------------------------------------------
-    # Other CUDA GPUs
+    # OTHER CUDA GPU
     # --------------------------------------------------------
 
     else:
 
-        GPU_FAMILY = "Other CUDA GPU"
+        GPU_FAMILY = (
+            "Other CUDA GPU"
+        )
 
     # --------------------------------------------------------
-    # Select dtype based on actual hardware capability.
-    #
-    # A100 and B200 both support BF16.
+    # SELECT DTYPE
     # --------------------------------------------------------
 
     if torch.cuda.is_bf16_supported():
@@ -79,6 +86,10 @@ if torch.cuda.is_available():
 
         DTYPE = torch.float16
 
+
+# ============================================================
+# DISPLAY HARDWARE INFORMATION
+# ============================================================
 
 print(
     "========================================",
@@ -127,13 +138,17 @@ print(
 )
 
 bf16_supported = (
+
     torch.cuda.is_bf16_supported()
+
     if torch.cuda.is_available()
+
     else False
 )
 
 print(
-    f"BF16 supported:     {bf16_supported}",
+    f"BF16 supported:     "
+    f"{bf16_supported}",
     flush=True
 )
 
@@ -153,10 +168,8 @@ print(
 # GENERATION CONFIGURATION
 # ============================================================
 
-# Keep the same maximum generation size as the original program.
 MAX_NEW_TOKENS = 32768
 
-# Original program uses deterministic generation.
 DO_SAMPLE = False
 
 
@@ -191,9 +204,18 @@ BASE_MODEL = (
 # ============================================================
 
 model = None
+
 tokenizer = None
 
+
+# ============================================================
+# CURRENTLY LOADED CONFIGURATION
+#
+# Used to avoid loading the same model repeatedly.
+# ============================================================
+
 loaded_version = None
+
 loaded_model_type = None
 
 
@@ -212,16 +234,20 @@ def LoadCausalLM(
     Newer Transformers versions use `dtype`.
     Older versions may use `torch_dtype`.
 
-    Try dtype first, then fall back if necessary.
+    Try dtype first, then fall back.
     """
 
     try:
 
         return (
+
             AutoModelForCausalLM
             .from_pretrained(
+
                 model_path,
+
                 dtype=DTYPE,
+
                 **kwargs
             )
         )
@@ -229,13 +255,58 @@ def LoadCausalLM(
     except TypeError:
 
         return (
+
             AutoModelForCausalLM
             .from_pretrained(
+
                 model_path,
+
                 torch_dtype=DTYPE,
+
                 **kwargs
             )
         )
+
+
+# ============================================================
+# CLEAR CURRENT MODEL
+# ============================================================
+
+def clear_model():
+
+    global model
+
+    global tokenizer
+
+    global loaded_version
+
+    global loaded_model_type
+
+
+    if model is not None:
+
+        del model
+
+        model = None
+
+
+    if tokenizer is not None:
+
+        del tokenizer
+
+        tokenizer = None
+
+
+    loaded_version = None
+
+    loaded_model_type = None
+
+
+    if torch.cuda.is_available():
+
+        torch.cuda.empty_cache()
+
+        torch.cuda.synchronize()
 
 
 # ============================================================
@@ -248,20 +319,85 @@ def load_model(
 ):
 
     global model
+
     global tokenizer
 
+    global loaded_version
+
+    global loaded_model_type
+
+
+    # --------------------------------------------------------
+    # REUSE MODEL
+    #
+    # If exactly the same model is already loaded,
+    # do not download/load it again.
+    # --------------------------------------------------------
+
+    if (
+
+        model is not None
+
+        and tokenizer is not None
+
+        and loaded_version == version
+
+        and loaded_model_type == model_type
+
+    ):
+
+        print(
+
+            "Requested model is already loaded. "
+            "Reusing the existing model.",
+
+            flush=True
+        )
+
+        return model
+
+
+    # --------------------------------------------------------
+    # DIFFERENT MODEL REQUESTED
+    # --------------------------------------------------------
+
+    if model is not None:
+
+        print(
+
+            "Different model requested. "
+            "Clearing current model...",
+
+            flush=True
+        )
+
+        clear_model()
+
+
+    # --------------------------------------------------------
+    # START LOADING
+    # --------------------------------------------------------
+
     print(
+
         f"Loading model "
         f"(version={version}, "
         f"type={model_type})...",
+
         flush=True
     )
 
-    # --------------------------------------------------------
-    # LoRA ADAPTER
-    # --------------------------------------------------------
+
+    # ========================================================
+    # LORA ADAPTER
+    # ========================================================
 
     if model_type == "LoRA Adapter":
+
+
+        # ----------------------------------------------------
+        # SELECT ADAPTER VERSION
+        # ----------------------------------------------------
 
         if version == 1:
 
@@ -269,101 +405,141 @@ def load_model(
                 LORA_MODEL_V1
             )
 
+
         elif version == 2:
 
             adapter_path = (
                 LORA_MODEL_V2
             )
 
+
         else:
 
             raise ValueError(
+
                 f"Unsupported model version: "
                 f"{version}"
             )
 
+
         print(
+
             f"Base model:   "
             f"{BASE_MODEL}",
+
             flush=True
         )
 
+
         print(
+
             f"LoRA adapter: "
             f"{adapter_path}",
+
             flush=True
         )
+
 
         # ----------------------------------------------------
         # TOKENIZER
         # ----------------------------------------------------
 
         print(
+
             "Loading tokenizer...",
+
             flush=True
         )
 
+
         tokenizer = (
+
             AutoTokenizer
             .from_pretrained(
+
                 BASE_MODEL,
+
                 use_fast=True
             )
         )
 
-        # Preserve original behavior.
+
         if tokenizer.unk_token is not None:
 
             tokenizer.pad_token = (
+
                 tokenizer.unk_token
             )
+
 
         elif tokenizer.pad_token is None:
 
             tokenizer.pad_token = (
+
                 tokenizer.eos_token
             )
 
-        tokenizer.padding_side = "left"
+
+        tokenizer.padding_side = (
+            "left"
+        )
+
 
         print(
+
             "Tokenizer loaded.",
+
             flush=True
         )
+
 
         # ----------------------------------------------------
         # BASE MODEL
         # ----------------------------------------------------
 
         print(
+
             "Loading base model...",
+
             flush=True
         )
 
-        model = LoadCausalLM(
 
-            BASE_MODEL,
+        model = (
 
-            device_map="auto",
+            LoadCausalLM(
 
-            low_cpu_mem_usage=True
+                BASE_MODEL,
+
+                device_map="auto",
+
+                low_cpu_mem_usage=True
+            )
         )
+
 
         print(
+
             "Base model loaded.",
+
             flush=True
         )
+
 
         # ----------------------------------------------------
         # LORA ADAPTER
         # ----------------------------------------------------
 
         print(
+
             "Loading LoRA adapter...",
+
             flush=True
         )
 
+
         model = (
+
             PeftModel
             .from_pretrained(
 
@@ -375,16 +551,25 @@ def load_model(
             )
         )
 
+
         print(
+
             "LoRA adapter loaded.",
+
             flush=True
         )
 
-    # --------------------------------------------------------
+
+    # ========================================================
     # FULL MODEL
-    # --------------------------------------------------------
+    # ========================================================
 
     elif model_type == "Full Model":
+
+
+        # ----------------------------------------------------
+        # SELECT MODEL VERSION
+        # ----------------------------------------------------
 
         if version == 1:
 
@@ -392,87 +577,121 @@ def load_model(
                 FULL_MODEL_V1
             )
 
+
         elif version == 2:
 
             model_path = (
                 FULL_MODEL_V2
             )
 
+
         else:
 
             raise ValueError(
+
                 f"Unsupported model version: "
                 f"{version}"
             )
 
+
         print(
+
             f"Full model: "
             f"{model_path}",
+
             flush=True
         )
+
 
         # ----------------------------------------------------
         # TOKENIZER
         # ----------------------------------------------------
 
         print(
+
             "Loading tokenizer...",
+
             flush=True
         )
 
+
         tokenizer = (
+
             AutoTokenizer
             .from_pretrained(
+
                 model_path,
+
                 use_fast=True
             )
         )
 
+
         if tokenizer.unk_token is not None:
 
             tokenizer.pad_token = (
+
                 tokenizer.unk_token
             )
+
 
         elif tokenizer.pad_token is None:
 
             tokenizer.pad_token = (
+
                 tokenizer.eos_token
             )
 
-        tokenizer.padding_side = "left"
+
+        tokenizer.padding_side = (
+            "left"
+        )
+
 
         print(
+
             "Tokenizer loaded.",
+
             flush=True
         )
 
+
         # ----------------------------------------------------
-        # MODEL
+        # FULL MODEL
         # ----------------------------------------------------
 
         print(
+
             "Loading full model...",
+
             flush=True
         )
 
-        model = LoadCausalLM(
 
-            model_path,
+        model = (
 
-            device_map="auto",
+            LoadCausalLM(
 
-            low_cpu_mem_usage=True
+                model_path,
+
+                device_map="auto",
+
+                low_cpu_mem_usage=True
+            )
         )
+
 
         print(
+
             "Full model loaded.",
+
             flush=True
         )
 
-    # --------------------------------------------------------
+
+    # ========================================================
     # INVALID MODEL TYPE
-    # --------------------------------------------------------
+    # ========================================================
 
     else:
 
@@ -485,27 +704,44 @@ def load_model(
             f"or 'Full Model'."
         )
 
+
     # --------------------------------------------------------
     # EVALUATION MODE
     # --------------------------------------------------------
 
     model.eval()
 
+
+    # --------------------------------------------------------
+    # SAVE LOADED CONFIGURATION
+    # --------------------------------------------------------
+
+    loaded_version = version
+
+    loaded_model_type = model_type
+
+
     print(
+
         "Model loaded successfully.",
+
         flush=True
     )
+
 
     return model
 
 
 # ============================================================
-# ORIGINAL PROMPT
+# GENERATE PROMPT
 # ============================================================
 
-def GeneratePrompt(content):
+def GeneratePrompt(
+    content
+):
 
     Instruction = (
+
         "Analyze the following Mamba code, "
         "detect any flaws, with a short explanation, "
         "and give one or more corrected versions of "
@@ -514,15 +750,25 @@ def GeneratePrompt(content):
         "only the improved version should be shown:"
     )
 
-    prompt = f"""Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately solves the following Task:
+
+    prompt = f"""
+
+Below is an instruction that describes a task,
+paired with an input that provides further context.
+Write a response that appropriately solves the following Task:
 
 ### Instruction:
+
 {Instruction}
 
 ### Code:
+
 {content}
+
 ### Response:
+
 """
+
 
     return prompt
 
@@ -531,10 +777,14 @@ def GeneratePrompt(content):
 # INFERENCE
 # ============================================================
 
-def GenerateInferenceOutput(text):
+def GenerateInferenceOutput(
+    text
+):
 
     global model
+
     global tokenizer
+
 
     # --------------------------------------------------------
     # CHECK MODEL
@@ -543,68 +793,100 @@ def GenerateInferenceOutput(text):
     if model is None:
 
         raise RuntimeError(
+
             "Model has not been loaded."
         )
+
 
     if tokenizer is None:
 
         raise RuntimeError(
+
             "Tokenizer has not been loaded."
         )
 
+
     # --------------------------------------------------------
-    # ORIGINAL TOKENIZER BEHAVIOR
+    # TOKENIZER CONFIGURATION
     # --------------------------------------------------------
 
     if tokenizer.unk_token is not None:
 
         tokenizer.pad_token = (
+
             tokenizer.unk_token
         )
+
 
     elif tokenizer.pad_token is None:
 
         tokenizer.pad_token = (
+
             tokenizer.eos_token
         )
 
+
     # --------------------------------------------------------
-    # GENERATE ORIGINAL PROMPT
+    # GENERATE PROMPT
     # --------------------------------------------------------
 
     prompt = GeneratePrompt(
         text
     )
 
+
     # --------------------------------------------------------
     # TOKENIZE
-    #
-    # Same style as the original program.
     # --------------------------------------------------------
 
-    inputs = tokenizer(
+    inputs = (
 
-        prompt,
+        tokenizer(
 
-        return_tensors="pt"
+            prompt,
 
-    ).to(DEVICE)
+            return_tensors="pt"
+        )
+    )
+
+
+    # --------------------------------------------------------
+    # MOVE INPUT TO MODEL DEVICE
+    #
+    # This is safer than forcing cuda:0 when using
+    # device_map="auto".
+    # --------------------------------------------------------
+
+    model_device = next(
+        model.parameters()
+    ).device
+
+
+    inputs = inputs.to(
+        model_device
+    )
+
 
     input_tokens = (
-        inputs["input_ids"]
+
+        inputs[
+            "input_ids"
+        ]
         .shape[1]
     )
 
+
     print(
+
         f"Input tokens: "
         f"{input_tokens}",
+
         flush=True
     )
 
+
     # --------------------------------------------------------
     # CLEAR CUDA CACHE
-    #
-    # Same as original program.
     # --------------------------------------------------------
 
     if torch.cuda.is_available():
@@ -613,31 +895,24 @@ def GenerateInferenceOutput(text):
 
         torch.cuda.synchronize()
 
+
     # --------------------------------------------------------
     # START TIMER
     # --------------------------------------------------------
 
     start_time = time.time()
 
+
     print(
+
         "Starting generation...",
+
         flush=True
     )
 
+
     # --------------------------------------------------------
-    # GENERATION ARGUMENTS
-    #
-    # Original program:
-    #
-    # do_sample=False
-    # temperature=0.0
-    # top_p=1.0
-    #
-    # In deterministic generation, temperature and top_p
-    # do not affect the result. New Transformers versions
-    # warn when they are passed with do_sample=False.
-    #
-    # Therefore they are intentionally omitted here.
+    # GENERATION SETTINGS
     # --------------------------------------------------------
 
     generation_kwargs = {
@@ -652,18 +927,23 @@ def GenerateInferenceOutput(text):
             tokenizer.eos_token_id
     }
 
+
     # --------------------------------------------------------
     # GENERATE
     # --------------------------------------------------------
 
     with torch.inference_mode():
 
-        outputs = model.generate(
+        outputs = (
 
-            **inputs,
+            model.generate(
 
-            **generation_kwargs
+                **inputs,
+
+                **generation_kwargs
+            )
         )
+
 
     # --------------------------------------------------------
     # SYNCHRONIZE CUDA
@@ -672,6 +952,7 @@ def GenerateInferenceOutput(text):
     if torch.cuda.is_available():
 
         torch.cuda.synchronize()
+
 
     # --------------------------------------------------------
     # CALCULATE TIME
@@ -684,13 +965,17 @@ def GenerateInferenceOutput(text):
         - start_time
     )
 
+
     print(
+
         "Generation finished.",
+
         flush=True
     )
 
+
     # --------------------------------------------------------
-    # COUNT GENERATED TOKENS
+    # GENERATED TOKENS
     # --------------------------------------------------------
 
     generated_tokens = (
@@ -700,49 +985,38 @@ def GenerateInferenceOutput(text):
         - input_tokens
     )
 
+
     # --------------------------------------------------------
-    # DECODE
+    # DECODE ONLY GENERATED TOKENS
     #
-    # Same approach as original program.
+    # This avoids splitting the entire prompt using
+    # the string "Response:".
     # --------------------------------------------------------
 
-    output_p = (
-        tokenizer.batch_decode(
+    generated_output = (
 
-            outputs,
+        outputs[
+            :,
+            input_tokens:
+        ]
+    )
+
+
+    output_text = (
+
+        tokenizer.decode(
+
+            generated_output[0],
 
             skip_special_tokens=True
         )
     )
 
-    # --------------------------------------------------------
-    # EXTRACT RESPONSE
-    #
-    # Same behavior as original program.
-    # --------------------------------------------------------
 
-    output = None
+    output = (
+        output_text.strip()
+    )
 
-    if output_p:
-
-        output_text = (
-            output_p[0]
-        )
-
-        split_text = (
-            output_text.split(
-                "Response:"
-            )
-        )
-
-        if len(split_text) > 1:
-
-            output = (
-
-                split_text[1]
-
-                .strip()
-            )
 
     return (
 
@@ -758,68 +1032,70 @@ def GenerateInferenceOutput(text):
 
 # ============================================================
 # EXTRACT CLEAN DICTIONARY
-#
-# Based on the original program.
 # ============================================================
 
-# ============================================================
-# EXTRACT CLEAN DICTIONARY
-#
-# Extracts only the dictionary returned by the model.
-# The original model prompt and inference behavior are kept.
-# ============================================================
-
-def ExtractCleanDict(text):
+def ExtractCleanDict(
+    text
+):
 
     if text is None:
 
         raise ValueError(
+
             "Model output is None."
         )
 
-    text = str(text).strip()
+
+    text = str(
+        text
+    ).strip()
+
 
     # --------------------------------------------------------
-    # Remove response marker if present.
+    # REMOVE RESPONSE MARKER
     # --------------------------------------------------------
 
     if "### Response:" in text:
 
         text = (
+
             text.split(
+
                 "### Response:",
+
                 1
+
             )[1]
+
             .strip()
         )
 
+
     # --------------------------------------------------------
-    # Find the beginning of the dictionary.
+    # FIND DICTIONARY START
     # --------------------------------------------------------
 
     start = text.find(
         "{'Flaws'"
     )
 
+
     if start == -1:
 
         raise ValueError(
+
             "No dictionary starting with "
             "{'Flaws' was found."
         )
 
-    # --------------------------------------------------------
-    # Start scanning from the dictionary.
-    # --------------------------------------------------------
 
-    candidate = text[start:]
+    candidate = text[
+        start:
+    ]
+
 
     # --------------------------------------------------------
-    # Find the matching closing brace.
-    #
-    # Braces inside strings are ignored.
-    # This is important because the refactored Mamba code
-    # itself can contain { and }.
+    # FIND MATCHING BRACE
     # --------------------------------------------------------
 
     depth = 0
@@ -832,11 +1108,11 @@ def ExtractCleanDict(text):
 
     end_position = None
 
-    for index, char in enumerate(candidate):
 
-        # ----------------------------------------------------
-        # Handle escaped characters.
-        # ----------------------------------------------------
+    for index, char in enumerate(
+        candidate
+    ):
+
 
         if escaped:
 
@@ -844,17 +1120,26 @@ def ExtractCleanDict(text):
 
             continue
 
+
         if char == "\\" and in_string:
 
             escaped = True
 
             continue
 
+
         # ----------------------------------------------------
-        # Handle strings.
+        # STRING HANDLING
         # ----------------------------------------------------
 
-        if char in ("'", '"'):
+        if char in (
+
+            "'",
+
+            '"'
+
+        ):
+
 
             if not in_string:
 
@@ -862,150 +1147,186 @@ def ExtractCleanDict(text):
 
                 string_quote = char
 
+
             elif char == string_quote:
 
                 in_string = False
 
                 string_quote = None
 
+
             continue
 
+
         # ----------------------------------------------------
-        # Ignore braces inside strings.
+        # IGNORE BRACES INSIDE STRINGS
         # ----------------------------------------------------
 
         if in_string:
 
             continue
 
+
         # ----------------------------------------------------
-        # Track dictionary braces.
+        # TRACK BRACES
         # ----------------------------------------------------
 
         if char == "{":
 
             depth += 1
 
+
         elif char == "}":
 
             depth -= 1
 
+
             if depth == 0:
 
-                end_position = index + 1
+                end_position = (
+                    index + 1
+                )
 
                 break
 
+
     # --------------------------------------------------------
-    # Make sure the dictionary was closed.
+    # VALIDATE END
     # --------------------------------------------------------
 
     if end_position is None:
 
         raise ValueError(
+
             "Could not find the end of the "
             "model output dictionary."
         )
 
-    # --------------------------------------------------------
-    # IMPORTANT:
-    #
-    # Do NOT replace newlines here.
-    #
-    # The model already correctly returns \\n inside the
-    # Refactored Versions string.
-    # --------------------------------------------------------
 
     candidate = (
+
         candidate[
             :end_position
         ]
+
         .strip()
     )
 
+
     # --------------------------------------------------------
-    # Parse dictionary.
+    # PARSE DICTIONARY
     # --------------------------------------------------------
 
     try:
 
-        result = ast.literal_eval(
-            candidate
+        result = (
+
+            ast.literal_eval(
+                candidate
+            )
         )
+
 
     except Exception as e:
 
         raise ValueError(
+
             "Could not parse model output "
             f"as a Python dictionary: {e}"
+
         ) from e
 
+
     # --------------------------------------------------------
-    # Validate dictionary.
+    # VALIDATE
     # --------------------------------------------------------
 
-    if not isinstance(result, dict):
+    if not isinstance(
+        result,
+        dict
+    ):
 
         raise ValueError(
+
             "Model output is not a dictionary."
         )
+
 
     if "Flaws" not in result:
 
         raise ValueError(
+
             "Model dictionary does not contain "
             "'Flaws'."
         )
 
+
     if "Refactored Versions" not in result:
 
         raise ValueError(
+
             "Model dictionary does not contain "
             "'Refactored Versions'."
         )
 
+
     return result
 
+
 # ============================================================
 # FORMAT OUTPUT
 # ============================================================
 
-# ============================================================
-# FORMAT OUTPUT
-#
-# Produces the same output format as the original program.
-# ============================================================
-
-def FormatOutput(output_dict):
+def FormatOutput(
+    output_dict
+):
 
     result = ""
+
 
     # --------------------------------------------------------
     # FLAWS
     # --------------------------------------------------------
 
-    result += "Flaws:\n"
+    result += (
+        "Flaws:\n"
+    )
 
-    for entry in output_dict["Flaws"]:
+
+    for entry in output_dict[
+        "Flaws"
+    ]:
 
         result += (
-            f"   - {entry['Flaw']}: "
+
+            f"   - "
+            f"{entry['Flaw']}: "
             f"{entry['Explanation']}\n"
         )
+
 
     # --------------------------------------------------------
     # REFACTORED VERSIONS
     # --------------------------------------------------------
 
     result += (
+
         "\n"
         "Refactored versions code:\n\n"
     )
 
+
     result += (
-        output_dict["Refactored Versions"]
+
+        output_dict[
+            "Refactored Versions"
+        ]
     )
 
-    result += "\n\n"
+
+    result += (
+        "\n\n"
+    )
+
 
     return result
