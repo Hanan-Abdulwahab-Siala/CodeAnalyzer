@@ -16,10 +16,10 @@ OUTPUT_FILE = os.path.join(
 
 
 # ============================================================
-# READ UPLOADED FILE
+# LOAD FILE CONTENT INTO TEXTBOX
 # ============================================================
 
-def read_uploaded_file(
+def load_file_into_textbox(
     uploaded_file
 ):
 
@@ -48,33 +48,41 @@ def read_uploaded_file(
 
         ) as file:
 
-            content = file.read()
+            code = (
+                file.read()
+            )
 
 
-        return content
+        # ----------------------------------------------------
+        # RETURN FILE CONTENT
+        #
+        # This content will automatically appear
+        # in the manual code textbox.
+        # ----------------------------------------------------
+
+        return code
 
 
     except Exception as e:
 
         return (
-            f"ERROR READING FILE:\n"
-            f"{e}"
+
+            f"# ERROR: Could not read "
+            f"uploaded file.\n\n"
+            f"# Reason: {e}"
         )
 
 
 # ============================================================
 # TEST ANALYSIS FUNCTION
 #
-# This function does NOT load Mistral.
-# This function does NOT require a GPU.
-# It only tests the Gradio interface.
+# This does NOT load Mistral.
+# This does NOT require a GPU.
 # ============================================================
 
 def test_analyze_code(
 
-    uploaded_file,
-
-    pasted_code,
+    code,
 
     model_version,
 
@@ -83,83 +91,26 @@ def test_analyze_code(
 ):
 
     # --------------------------------------------------------
-    # DETERMINE INPUT SOURCE
-    # --------------------------------------------------------
-
-    code = ""
-
-    input_source = ""
-
-
-    # --------------------------------------------------------
-    # PRIORITY 1:
-    # UPLOADED FILE
-    # --------------------------------------------------------
-
-    if uploaded_file is not None:
-
-        try:
-
-            with open(
-
-                uploaded_file,
-
-                "r",
-
-                encoding="utf-8"
-
-            ) as file:
-
-                code = file.read()
-
-
-            input_source = (
-                "Uploaded File"
-            )
-
-
-        except Exception as e:
-
-            return (
-
-                f"ERROR: Could not read "
-                f"uploaded file.\n\n"
-                f"Reason: {e}",
-
-                None
-            )
-
-
-    # --------------------------------------------------------
-    # PRIORITY 2:
-    # PASTED CODE
-    # --------------------------------------------------------
-
-    elif pasted_code is not None:
-
-        if pasted_code.strip():
-
-            code = (
-                pasted_code
-            )
-
-            input_source = (
-                "Manual Text Input"
-            )
-
-
-    # --------------------------------------------------------
     # CHECK INPUT
     # --------------------------------------------------------
+
+    if code is None:
+
+        return (
+
+            "ERROR: No code was provided.",
+
+            None
+        )
+
 
     if not code.strip():
 
         return (
 
-            "ERROR: No code was provided.\n\n"
-            "Please either:\n"
-            "- Upload a code file, or\n"
-            "- Paste code into the text box.",
+            "ERROR: Code input is empty.\n\n"
+            "Please upload a file or paste "
+            "code manually.",
 
             None
         )
@@ -195,11 +146,8 @@ Model Type:
 Model Version:
 {model_version}
 
-Input Source:
-{input_source}
-
 ========================================
-INPUT CODE
+CODE TO ANALYZE
 ========================================
 
 {code}
@@ -213,7 +161,8 @@ The following components were tested:
 - Model Type selection
 - Model Version selection
 - File upload
-- Manual code input
+- Automatic file content loading
+- Manual code editing
 - Analyze button
 - Output display
 - output/output.txt creation
@@ -289,20 +238,19 @@ with gr.Blocks(
 
 ## Gradio Interface Test Mode
 
-This version allows you to test the complete interface
-without loading the AI model.
+You can either:
 
-You can:
+1. Upload a code file.
+   Its content will automatically appear in the code box.
 
-- Select the model type
-- Select the model version
-- Upload a code file
-- Paste code manually
-- Click Analyze Code
-- View the result
-- Download output/output.txt
+OR
 
-This test version does NOT require a GPU.
+2. Paste/type code directly into the code box.
+
+You can edit the code before clicking Analyze Code.
+
+This test version does not load a model and does not
+require a GPU.
         """
     )
 
@@ -346,26 +294,6 @@ This test version does NOT require a GPU.
 
 
     # --------------------------------------------------------
-    # INPUT SECTION
-    # --------------------------------------------------------
-
-    gr.Markdown(
-
-        """
-## Input Code
-
-You can use either method:
-
-1. Upload a code file, OR
-2. Paste the code manually.
-
-If you provide both, the uploaded file
-will be used.
-        """
-    )
-
-
-    # --------------------------------------------------------
     # FILE UPLOAD
     # --------------------------------------------------------
 
@@ -378,18 +306,41 @@ will be used.
 
 
     # --------------------------------------------------------
-    # MANUAL CODE INPUT
+    # CODE TEXTBOX
     # --------------------------------------------------------
 
-    pasted_code = gr.Textbox(
+    code_input = gr.Textbox(
 
-        label="Or Paste Code Manually",
+        label="Code to Analyze",
 
         placeholder=(
-            "Paste your Mamba code here..."
+            "Upload a file above or paste "
+            "your Mamba code here..."
         ),
 
-        lines=20
+        lines=25
+    )
+
+
+    # --------------------------------------------------------
+    # AUTOMATICALLY LOAD FILE CONTENT
+    # --------------------------------------------------------
+
+    uploaded_file.change(
+
+        fn=load_file_into_textbox,
+
+        inputs=[
+
+            uploaded_file
+
+        ],
+
+        outputs=[
+
+            code_input
+
+        ]
     )
 
 
@@ -439,9 +390,7 @@ will be used.
 
         inputs=[
 
-            uploaded_file,
-
-            pasted_code,
+            code_input,
 
             model_version,
 
