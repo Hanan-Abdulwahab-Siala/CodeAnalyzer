@@ -1,7 +1,7 @@
-torch
-transformers
-peft
-accelerate
-sentencepiece
-safetensors
-gradio
+transformers>=4.48,<6
+peft>=0.14,<1
+accelerate>=1.2,<2
+safetensors>=0.4
+sentencepiece>=0.2
+gradio>=5,<7
+huggingface_hub>=0.27,<2
