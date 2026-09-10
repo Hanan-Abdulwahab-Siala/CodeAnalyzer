@@ -1,5 +1,5 @@
-import time
 import ast
+import time
 
 import torch
 
@@ -14,152 +14,106 @@ from peft import (
 
 
 # ============================================================
-# GPU / DEVICE CONFIGURATION
+# GPU CONFIGURATION
 # ============================================================
 
-DEVICE = "cpu"
-
-DTYPE = torch.float32
-
-GPU_NAME = "CPU"
-
-GPU_CAPABILITY = None
-
-GPU_FAMILY = "CPU"
+CUDA_AVAILABLE = (
+    torch.cuda.is_available()
+)
 
 
-if torch.cuda.is_available():
+if CUDA_AVAILABLE:
 
     DEVICE = "cuda:0"
 
     GPU_NAME = (
-        torch.cuda.get_device_name(0)
+        torch.cuda.get_device_name(
+            0
+        )
     )
 
-    GPU_CAPABILITY = (
-        torch.cuda.get_device_capability(0)
-    )
-
-    GPU_MAJOR = GPU_CAPABILITY[0]
-
-    GPU_MINOR = GPU_CAPABILITY[1]
-
-    # --------------------------------------------------------
-    # A100 / AMPERE
-    # --------------------------------------------------------
-
-    if GPU_MAJOR == 8:
-
-        GPU_FAMILY = (
-            "Ampere (A100 compatible)"
-        )
-
-    # --------------------------------------------------------
-    # BLACKWELL
-    # --------------------------------------------------------
-
-    elif GPU_MAJOR >= 10:
-
-        GPU_FAMILY = (
-            "Blackwell (B200 compatible)"
-        )
-
-    # --------------------------------------------------------
-    # OTHER CUDA GPU
-    # --------------------------------------------------------
-
-    else:
-
-        GPU_FAMILY = (
-            "Other CUDA GPU"
-        )
-
-    # --------------------------------------------------------
-    # SELECT DTYPE
-    # --------------------------------------------------------
 
     if torch.cuda.is_bf16_supported():
 
-        DTYPE = torch.bfloat16
+        DTYPE = (
+            torch.bfloat16
+        )
 
     else:
 
-        DTYPE = torch.float16
+        DTYPE = (
+            torch.float16
+        )
 
 
-# ============================================================
-# DISPLAY HARDWARE INFORMATION
-# ============================================================
+else:
 
-print(
-    "========================================",
-    flush=True
-)
+    DEVICE = "cpu"
 
-print(
-    "GPU configuration",
-    flush=True
-)
+    GPU_NAME = "CPU"
 
-print(
-    "========================================",
-    flush=True
-)
-
-print(
-    f"GPU:                {GPU_NAME}",
-    flush=True
-)
-
-print(
-    f"GPU family:         {GPU_FAMILY}",
-    flush=True
-)
-
-if GPU_CAPABILITY is not None:
-
-    print(
-        f"Compute capability: "
-        f"sm_{GPU_CAPABILITY[0]}"
-        f"{GPU_CAPABILITY[1]}",
-        flush=True
+    DTYPE = (
+        torch.float32
     )
 
+
+# ============================================================
+# DISPLAY HARDWARE
+# ============================================================
+
 print(
-    f"PyTorch version:    "
+    "=" * 60,
+    flush=True
+)
+
+print(
+    "MAMBA CODE ANALYZER - HARDWARE",
+    flush=True
+)
+
+print(
+    "=" * 60,
+    flush=True
+)
+
+print(
+    f"CUDA available : "
+    f"{CUDA_AVAILABLE}",
+    flush=True
+)
+
+print(
+    f"Device         : "
+    f"{DEVICE}",
+    flush=True
+)
+
+print(
+    f"GPU            : "
+    f"{GPU_NAME}",
+    flush=True
+)
+
+print(
+    f"PyTorch        : "
     f"{torch.__version__}",
     flush=True
 )
 
 print(
-    f"CUDA version:       "
+    f"CUDA version   : "
     f"{torch.version.cuda}",
     flush=True
 )
 
-bf16_supported = (
-
-    torch.cuda.is_bf16_supported()
-
-    if torch.cuda.is_available()
-
-    else False
-)
-
 print(
-    f"BF16 supported:     "
-    f"{bf16_supported}",
-    flush=True
-)
-
-print(
-    f"Using dtype:        "
+    f"Dtype          : "
     f"{DTYPE}",
     flush=True
 )
 
 print(
-    "========================================",
+    "=" * 60,
     flush=True
 )
 
@@ -168,7 +122,9 @@ print(
 # GENERATION CONFIGURATION
 # ============================================================
 
-MAX_NEW_TOKENS = 32768
+# Safer than 32768 for public users with different GPUs.
+
+MAX_NEW_TOKENS = 4096
 
 DO_SAMPLE = False
 
@@ -185,6 +141,7 @@ FULL_MODEL_V2 = (
     "HA-Siala/Mamba-full-v0.2"
 )
 
+
 LORA_MODEL_V1 = (
     "HA-Siala/Mamba-v0.1"
 )
@@ -200,7 +157,7 @@ BASE_MODEL = (
 
 
 # ============================================================
-# GLOBAL MODEL / TOKENIZER
+# GLOBAL MODEL STATE
 # ============================================================
 
 model = None
@@ -208,68 +165,59 @@ model = None
 tokenizer = None
 
 
-# ============================================================
-# CURRENTLY LOADED CONFIGURATION
-#
-# Used to avoid loading the same model repeatedly.
-# ============================================================
-
 loaded_version = None
 
 loaded_model_type = None
 
 
 # ============================================================
-# MODEL LOADING HELPER
+# LOAD CAUSAL LM
 # ============================================================
 
-def LoadCausalLM(
+def load_causal_lm(
     model_path,
     **kwargs
 ):
 
-    """
-    Load a causal language model.
+    return (
 
-    Newer Transformers versions use `dtype`.
-    Older versions may use `torch_dtype`.
+        AutoModelForCausalLM
+        .from_pretrained(
 
-    Try dtype first, then fall back.
-    """
+            model_path,
 
-    try:
+            torch_dtype=DTYPE,
 
-        return (
-
-            AutoModelForCausalLM
-            .from_pretrained(
-
-                model_path,
-
-                dtype=DTYPE,
-
-                **kwargs
-            )
+            **kwargs
         )
-
-    except TypeError:
-
-        return (
-
-            AutoModelForCausalLM
-            .from_pretrained(
-
-                model_path,
-
-                torch_dtype=DTYPE,
-
-                **kwargs
-            )
-        )
+    )
 
 
 # ============================================================
-# CLEAR CURRENT MODEL
+# CONFIGURE TOKENIZER
+# ============================================================
+
+def configure_tokenizer(
+    tok
+):
+
+    if tok.pad_token is None:
+
+        tok.pad_token = (
+            tok.eos_token
+        )
+
+
+    tok.padding_side = (
+        "left"
+    )
+
+
+    return tok
+
+
+# ============================================================
+# CLEAR MODEL
 # ============================================================
 
 def clear_model():
@@ -314,8 +262,11 @@ def clear_model():
 # ============================================================
 
 def load_model(
+
     version=2,
+
     model_type="LoRA Adapter"
+
 ):
 
     global model
@@ -329,9 +280,6 @@ def load_model(
 
     # --------------------------------------------------------
     # REUSE MODEL
-    #
-    # If exactly the same model is already loaded,
-    # do not download/load it again.
     # --------------------------------------------------------
 
     if (
@@ -349,7 +297,7 @@ def load_model(
         print(
 
             "Requested model is already loaded. "
-            "Reusing the existing model.",
+            "Reusing it.",
 
             flush=True
         )
@@ -358,7 +306,7 @@ def load_model(
 
 
     # --------------------------------------------------------
-    # DIFFERENT MODEL REQUESTED
+    # CLEAR DIFFERENT MODEL
     # --------------------------------------------------------
 
     if model is not None:
@@ -366,7 +314,7 @@ def load_model(
         print(
 
             "Different model requested. "
-            "Clearing current model...",
+            "Clearing current model.",
 
             flush=True
         )
@@ -375,29 +323,58 @@ def load_model(
 
 
     # --------------------------------------------------------
-    # START LOADING
+    # VALIDATE VERSION
     # --------------------------------------------------------
+
+    if version not in (
+
+        1,
+
+        2
+
+    ):
+
+        raise ValueError(
+
+            f"Unsupported model version: "
+            f"{version}"
+        )
+
+
+    # --------------------------------------------------------
+    # VALIDATE TYPE
+    # --------------------------------------------------------
+
+    if model_type not in (
+
+        "LoRA Adapter",
+
+        "Full Model"
+
+    ):
+
+        raise ValueError(
+
+            "Unsupported model type."
+        )
+
 
     print(
 
-        f"Loading model "
-        f"(version={version}, "
-        f"type={model_type})...",
+        f"Loading model: "
+        f"version={version}, "
+        f"type={model_type}",
 
         flush=True
     )
 
 
     # ========================================================
-    # LORA ADAPTER
+    # LORA
     # ========================================================
 
     if model_type == "LoRA Adapter":
 
-
-        # ----------------------------------------------------
-        # SELECT ADAPTER VERSION
-        # ----------------------------------------------------
 
         if version == 1:
 
@@ -406,30 +383,20 @@ def load_model(
             )
 
 
-        elif version == 2:
+        else:
 
             adapter_path = (
                 LORA_MODEL_V2
             )
 
 
-        else:
-
-            raise ValueError(
-
-                f"Unsupported model version: "
-                f"{version}"
-            )
-
-
         print(
 
-            f"Base model:   "
+            f"Base model: "
             f"{BASE_MODEL}",
 
             flush=True
         )
-
 
         print(
 
@@ -444,14 +411,6 @@ def load_model(
         # TOKENIZER
         # ----------------------------------------------------
 
-        print(
-
-            "Loading tokenizer...",
-
-            flush=True
-        )
-
-
         tokenizer = (
 
             AutoTokenizer
@@ -464,32 +423,10 @@ def load_model(
         )
 
 
-        if tokenizer.unk_token is not None:
-
-            tokenizer.pad_token = (
-
-                tokenizer.unk_token
+        tokenizer = (
+            configure_tokenizer(
+                tokenizer
             )
-
-
-        elif tokenizer.pad_token is None:
-
-            tokenizer.pad_token = (
-
-                tokenizer.eos_token
-            )
-
-
-        tokenizer.padding_side = (
-            "left"
-        )
-
-
-        print(
-
-            "Tokenizer loaded.",
-
-            flush=True
         )
 
 
@@ -497,17 +434,9 @@ def load_model(
         # BASE MODEL
         # ----------------------------------------------------
 
-        print(
-
-            "Loading base model...",
-
-            flush=True
-        )
-
-
         model = (
 
-            LoadCausalLM(
+            load_causal_lm(
 
                 BASE_MODEL,
 
@@ -518,25 +447,9 @@ def load_model(
         )
 
 
-        print(
-
-            "Base model loaded.",
-
-            flush=True
-        )
-
-
         # ----------------------------------------------------
         # LORA ADAPTER
         # ----------------------------------------------------
-
-        print(
-
-            "Loading LoRA adapter...",
-
-            flush=True
-        )
-
 
         model = (
 
@@ -552,24 +465,12 @@ def load_model(
         )
 
 
-        print(
-
-            "LoRA adapter loaded.",
-
-            flush=True
-        )
-
-
     # ========================================================
     # FULL MODEL
     # ========================================================
 
-    elif model_type == "Full Model":
+    else:
 
-
-        # ----------------------------------------------------
-        # SELECT MODEL VERSION
-        # ----------------------------------------------------
 
         if version == 1:
 
@@ -578,19 +479,10 @@ def load_model(
             )
 
 
-        elif version == 2:
+        else:
 
             model_path = (
                 FULL_MODEL_V2
-            )
-
-
-        else:
-
-            raise ValueError(
-
-                f"Unsupported model version: "
-                f"{version}"
             )
 
 
@@ -598,18 +490,6 @@ def load_model(
 
             f"Full model: "
             f"{model_path}",
-
-            flush=True
-        )
-
-
-        # ----------------------------------------------------
-        # TOKENIZER
-        # ----------------------------------------------------
-
-        print(
-
-            "Loading tokenizer...",
 
             flush=True
         )
@@ -627,50 +507,16 @@ def load_model(
         )
 
 
-        if tokenizer.unk_token is not None:
-
-            tokenizer.pad_token = (
-
-                tokenizer.unk_token
+        tokenizer = (
+            configure_tokenizer(
+                tokenizer
             )
-
-
-        elif tokenizer.pad_token is None:
-
-            tokenizer.pad_token = (
-
-                tokenizer.eos_token
-            )
-
-
-        tokenizer.padding_side = (
-            "left"
-        )
-
-
-        print(
-
-            "Tokenizer loaded.",
-
-            flush=True
-        )
-
-
-        # ----------------------------------------------------
-        # FULL MODEL
-        # ----------------------------------------------------
-
-        print(
-
-            "Loading full model...",
-
-            flush=True
         )
 
 
         model = (
 
-            LoadCausalLM(
+            load_causal_lm(
 
                 model_path,
 
@@ -678,30 +524,6 @@ def load_model(
 
                 low_cpu_mem_usage=True
             )
-        )
-
-
-        print(
-
-            "Full model loaded.",
-
-            flush=True
-        )
-
-
-    # ========================================================
-    # INVALID MODEL TYPE
-    # ========================================================
-
-    else:
-
-        raise ValueError(
-
-            f"Unsupported model type: "
-            f"{model_type}. "
-
-            f"Use 'LoRA Adapter' "
-            f"or 'Full Model'."
         )
 
 
@@ -713,7 +535,7 @@ def load_model(
 
 
     # --------------------------------------------------------
-    # SAVE LOADED CONFIGURATION
+    # SAVE CONFIGURATION
     # --------------------------------------------------------
 
     loaded_version = version
@@ -733,21 +555,99 @@ def load_model(
 
 
 # ============================================================
+# HARDWARE INFO
+# ============================================================
+
+def get_hardware_info():
+
+    if not torch.cuda.is_available():
+
+        return (
+
+            "GPU: CPU\n"
+
+            f"PyTorch: "
+            f"{torch.__version__}\n"
+
+            "CUDA: Not available"
+        )
+
+
+    free_bytes, total_bytes = (
+
+        torch.cuda.mem_get_info(
+            0
+        )
+    )
+
+
+    free_gb = (
+
+        free_bytes
+        /
+        (1024 ** 3)
+    )
+
+
+    total_gb = (
+
+        total_bytes
+        /
+        (1024 ** 3)
+    )
+
+
+    capability = (
+
+        torch.cuda.get_device_capability(
+            0
+        )
+    )
+
+
+    return (
+
+        f"GPU: "
+        f"{torch.cuda.get_device_name(0)}\n"
+
+        f"CUDA: "
+        f"{torch.version.cuda}\n"
+
+        f"PyTorch: "
+        f"{torch.__version__}\n"
+
+        f"VRAM: "
+        f"{free_gb:.2f} GB free / "
+        f"{total_gb:.2f} GB total\n"
+
+        f"Compute capability: "
+        f"{capability}\n"
+
+        f"Dtype: "
+        f"{DTYPE}"
+    )
+
+
+# ============================================================
 # GENERATE PROMPT
 # ============================================================
 
-def GeneratePrompt(
+def generate_prompt(
     content
 ):
 
-    Instruction = (
+    instruction = (
 
         "Analyze the following Mamba code, "
-        "detect any flaws, with a short explanation, "
+        "detect any flaws, give a short explanation, "
         "and give one or more corrected versions of "
-        "the code. Ensure that none of the refactored "
-        "options repeat or reproduce the original code; "
-        "only the improved version should be shown:"
+        "the code. Ensure that the refactored options "
+        "do not repeat the original code. "
+
+        "Return the result as a Python dictionary "
+        "with exactly these keys: "
+
+        "'Flaws' and 'Refactored Versions'."
     )
 
 
@@ -759,7 +659,7 @@ Write a response that appropriately solves the following Task:
 
 ### Instruction:
 
-{Instruction}
+{instruction}
 
 ### Code:
 
@@ -777,7 +677,7 @@ Write a response that appropriately solves the following Task:
 # INFERENCE
 # ============================================================
 
-def GenerateInferenceOutput(
+def generate_inference_output(
     text
 ):
 
@@ -785,10 +685,6 @@ def GenerateInferenceOutput(
 
     global tokenizer
 
-
-    # --------------------------------------------------------
-    # CHECK MODEL
-    # --------------------------------------------------------
 
     if model is None:
 
@@ -807,31 +703,14 @@ def GenerateInferenceOutput(
 
 
     # --------------------------------------------------------
-    # TOKENIZER CONFIGURATION
+    # PROMPT
     # --------------------------------------------------------
 
-    if tokenizer.unk_token is not None:
+    prompt = (
 
-        tokenizer.pad_token = (
-
-            tokenizer.unk_token
+        generate_prompt(
+            text
         )
-
-
-    elif tokenizer.pad_token is None:
-
-        tokenizer.pad_token = (
-
-            tokenizer.eos_token
-        )
-
-
-    # --------------------------------------------------------
-    # GENERATE PROMPT
-    # --------------------------------------------------------
-
-    prompt = GeneratePrompt(
-        text
     )
 
 
@@ -851,20 +730,30 @@ def GenerateInferenceOutput(
 
 
     # --------------------------------------------------------
-    # MOVE INPUT TO MODEL DEVICE
-    #
-    # This is safer than forcing cuda:0 when using
-    # device_map="auto".
+    # FIND INPUT DEVICE
     # --------------------------------------------------------
 
-    model_device = next(
-        model.parameters()
-    ).device
+    input_device = (
 
-
-    inputs = inputs.to(
-        model_device
+        model
+        .get_input_embeddings()
+        .weight
+        .device
     )
+
+
+    inputs = {
+
+        key:
+
+        value.to(
+            input_device
+        )
+
+        for key, value
+
+        in inputs.items()
+    }
 
 
     input_tokens = (
@@ -886,7 +775,7 @@ def GenerateInferenceOutput(
 
 
     # --------------------------------------------------------
-    # CLEAR CUDA CACHE
+    # CUDA CLEANUP
     # --------------------------------------------------------
 
     if torch.cuda.is_available():
@@ -897,35 +786,12 @@ def GenerateInferenceOutput(
 
 
     # --------------------------------------------------------
-    # START TIMER
+    # TIMER
     # --------------------------------------------------------
 
-    start_time = time.time()
-
-
-    print(
-
-        "Starting generation...",
-
-        flush=True
+    start_time = (
+        time.perf_counter()
     )
-
-
-    # --------------------------------------------------------
-    # GENERATION SETTINGS
-    # --------------------------------------------------------
-
-    generation_kwargs = {
-
-        "max_new_tokens":
-            MAX_NEW_TOKENS,
-
-        "do_sample":
-            DO_SAMPLE,
-
-        "pad_token_id":
-            tokenizer.eos_token_id
-    }
 
 
     # --------------------------------------------------------
@@ -940,13 +806,20 @@ def GenerateInferenceOutput(
 
                 **inputs,
 
-                **generation_kwargs
+                max_new_tokens=
+                    MAX_NEW_TOKENS,
+
+                do_sample=
+                    DO_SAMPLE,
+
+                pad_token_id=
+                    tokenizer.eos_token_id
             )
         )
 
 
     # --------------------------------------------------------
-    # SYNCHRONIZE CUDA
+    # SYNCHRONIZE
     # --------------------------------------------------------
 
     if torch.cuda.is_available():
@@ -954,28 +827,16 @@ def GenerateInferenceOutput(
         torch.cuda.synchronize()
 
 
-    # --------------------------------------------------------
-    # CALCULATE TIME
-    # --------------------------------------------------------
-
     inference_time = (
 
-        time.time()
+        time.perf_counter()
 
         - start_time
     )
 
 
-    print(
-
-        "Generation finished.",
-
-        flush=True
-    )
-
-
     # --------------------------------------------------------
-    # GENERATED TOKENS
+    # TOKEN COUNTS
     # --------------------------------------------------------
 
     generated_tokens = (
@@ -987,10 +848,7 @@ def GenerateInferenceOutput(
 
 
     # --------------------------------------------------------
-    # DECODE ONLY GENERATED TOKENS
-    #
-    # This avoids splitting the entire prompt using
-    # the string "Response:".
+    # DECODE
     # --------------------------------------------------------
 
     generated_output = (
@@ -1002,7 +860,7 @@ def GenerateInferenceOutput(
     )
 
 
-    output_text = (
+    output = (
 
         tokenizer.decode(
 
@@ -1010,11 +868,8 @@ def GenerateInferenceOutput(
 
             skip_special_tokens=True
         )
-    )
 
-
-    output = (
-        output_text.strip()
+        .strip()
     )
 
 
@@ -1031,10 +886,10 @@ def GenerateInferenceOutput(
 
 
 # ============================================================
-# EXTRACT CLEAN DICTIONARY
+# EXTRACT DICTIONARY
 # ============================================================
 
-def ExtractCleanDict(
+def extract_clean_dict(
     text
 ):
 
@@ -1050,10 +905,6 @@ def ExtractCleanDict(
         text
     ).strip()
 
-
-    # --------------------------------------------------------
-    # REMOVE RESPONSE MARKER
-    # --------------------------------------------------------
 
     if "### Response:" in text:
 
@@ -1071,32 +922,51 @@ def ExtractCleanDict(
         )
 
 
-    # --------------------------------------------------------
-    # FIND DICTIONARY START
-    # --------------------------------------------------------
+    starts = [
 
-    start = text.find(
-        "{'Flaws'"
-    )
+        text.find(
+            "{'Flaws'"
+        ),
 
-
-    if start == -1:
-
-        raise ValueError(
-
-            "No dictionary starting with "
-            "{'Flaws' was found."
+        text.find(
+            '{"Flaws"'
         )
 
-
-    candidate = text[
-        start:
     ]
 
 
-    # --------------------------------------------------------
-    # FIND MATCHING BRACE
-    # --------------------------------------------------------
+    starts = [
+
+        value
+
+        for value in starts
+
+        if value >= 0
+    ]
+
+
+    if not starts:
+
+        raise ValueError(
+
+            "No result dictionary "
+            "starting with 'Flaws' "
+            "was found."
+        )
+
+
+    start = min(
+        starts
+    )
+
+
+    candidate = (
+
+        text[
+            start:
+        ]
+    )
+
 
     depth = 0
 
@@ -1128,10 +998,6 @@ def ExtractCleanDict(
             continue
 
 
-        # ----------------------------------------------------
-        # STRING HANDLING
-        # ----------------------------------------------------
-
         if char in (
 
             "'",
@@ -1158,18 +1024,10 @@ def ExtractCleanDict(
             continue
 
 
-        # ----------------------------------------------------
-        # IGNORE BRACES INSIDE STRINGS
-        # ----------------------------------------------------
-
         if in_string:
 
             continue
 
-
-        # ----------------------------------------------------
-        # TRACK BRACES
-        # ----------------------------------------------------
 
         if char == "{":
 
@@ -1190,16 +1048,12 @@ def ExtractCleanDict(
                 break
 
 
-    # --------------------------------------------------------
-    # VALIDATE END
-    # --------------------------------------------------------
-
     if end_position is None:
 
         raise ValueError(
 
-            "Could not find the end of the "
-            "model output dictionary."
+            "Could not find the end "
+            "of the result dictionary."
         )
 
 
@@ -1212,10 +1066,6 @@ def ExtractCleanDict(
         .strip()
     )
 
-
-    # --------------------------------------------------------
-    # PARSE DICTIONARY
-    # --------------------------------------------------------
 
     try:
 
@@ -1237,10 +1087,6 @@ def ExtractCleanDict(
         ) from e
 
 
-    # --------------------------------------------------------
-    # VALIDATE
-    # --------------------------------------------------------
-
     if not isinstance(
         result,
         dict
@@ -1256,8 +1102,7 @@ def ExtractCleanDict(
 
         raise ValueError(
 
-            "Model dictionary does not contain "
-            "'Flaws'."
+            "Missing 'Flaws'."
         )
 
 
@@ -1265,8 +1110,7 @@ def ExtractCleanDict(
 
         raise ValueError(
 
-            "Model dictionary does not contain "
-            "'Refactored Versions'."
+            "Missing 'Refactored Versions'."
         )
 
 
@@ -1277,37 +1121,84 @@ def ExtractCleanDict(
 # FORMAT OUTPUT
 # ============================================================
 
-def FormatOutput(
+def format_output(
     output_dict
 ):
 
-    result = ""
-
-
-    # --------------------------------------------------------
-    # FLAWS
-    # --------------------------------------------------------
-
-    result += (
+    result = (
         "Flaws:\n"
     )
 
 
-    for entry in output_dict[
-        "Flaws"
-    ]:
+    flaws = (
+
+        output_dict[
+            "Flaws"
+        ]
+    )
+
+
+    if isinstance(
+        flaws,
+        list
+    ):
+
+
+        for entry in flaws:
+
+
+            if isinstance(
+                entry,
+                dict
+            ):
+
+                flaw = (
+
+                    entry.get(
+
+                        "Flaw",
+
+                        "Unknown flaw"
+                    )
+                )
+
+
+                explanation = (
+
+                    entry.get(
+
+                        "Explanation",
+
+                        ""
+                    )
+                )
+
+
+                result += (
+
+                    f"   - "
+                    f"{flaw}: "
+                    f"{explanation}\n"
+                )
+
+
+            else:
+
+                result += (
+
+                    f"   - "
+                    f"{entry}\n"
+                )
+
+
+    else:
 
         result += (
 
             f"   - "
-            f"{entry['Flaw']}: "
-            f"{entry['Explanation']}\n"
+            f"{flaws}\n"
         )
 
-
-    # --------------------------------------------------------
-    # REFACTORED VERSIONS
-    # --------------------------------------------------------
 
     result += (
 
@@ -1316,7 +1207,7 @@ def FormatOutput(
     )
 
 
-    result += (
+    result += str(
 
         output_dict[
             "Refactored Versions"
