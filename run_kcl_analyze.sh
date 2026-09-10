@@ -3,83 +3,55 @@
 #SBATCH --job-name=mamba-analyzer
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=02:00:00
 #SBATCH --output=/scratch/users/%u/mamba-%j.out
 #SBATCH --error=/scratch/users/%u/mamba-%j.err
 
-
 set -e
 
+echo "========================================"
+echo "Mamba Code Analyzer - KCL GPU Job"
+echo "========================================"
 
-# ============================================================
-# CUDA
-# ============================================================
+echo "Host:"
+hostname
 
+echo
+echo "GPU:"
+nvidia-smi
+
+echo
+echo "Loading CUDA..."
 module load cuda
-
-
-# ============================================================
-# PROJECT
-# ============================================================
 
 cd "$HOME/mamba-code-analyzer"
 
-
-# ============================================================
-# PYTHON ENVIRONMENT
-# ============================================================
-
 source .venv/bin/activate
 
+echo
+echo "Python:"
+python --version
 
-# ============================================================
-# GPU INFORMATION
-# ============================================================
-
-echo "========================================"
-
-echo "HOSTNAME:"
-
-hostname
-
-echo "========================================"
-
-echo "GPU:"
-
-nvidia-smi
-
-echo "========================================"
-
-
-# ============================================================
-# PYTORCH TEST
-# ============================================================
-
+echo
+echo "PyTorch:"
 python -c "
-
 import torch
-
+print('PyTorch:', torch.__version__)
 print('CUDA available:', torch.cuda.is_available())
-
+print('CUDA version:', torch.version.cuda)
 if torch.cuda.is_available():
-
-    print(
-        'GPU:',
-        torch.cuda.get_device_name(0)
-    )
-
-    print(
-        'CUDA:',
-        torch.version.cuda
-    )
-
+    print('GPU:', torch.cuda.get_device_name(0))
 "
 
-
-# ============================================================
-# RUN ANALYSIS
-# ============================================================
-
+echo
+echo "Running inference..."
 python analyze.py input/sample.txt
+
+echo
+echo "========================================"
+echo "Job completed"
+echo "========================================"
