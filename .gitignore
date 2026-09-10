@@ -1,20 +1,25 @@
+# Python
 __pycache__/
 *.py[cod]
+*.pyo
 
+# Virtual environments
 .venv/
 venv/
 env/
 
+# Hugging Face / caches
+.cache/
+hf_cache/
+
+# Generated output
 output/*
 !output/.gitkeep
 
-.cache/
-huggingface/
-transformers/
-
+# IDE
 .vscode/
 .idea/
 
+# OS
 .DS_Store
-
-*.log
+Thumbs.db
