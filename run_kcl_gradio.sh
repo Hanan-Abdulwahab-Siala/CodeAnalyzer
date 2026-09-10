@@ -11,6 +11,8 @@
 #SBATCH --output=/scratch/users/%u/mamba-gradio-%j.out
 #SBATCH --error=/scratch/users/%u/mamba-gradio-%j.err
 
+export PYTHONNOUSERSITE=1
+
 set -e
 
 echo "========================================"
