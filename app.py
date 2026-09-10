@@ -1,23 +1,33 @@
 import os
+
 import gradio as gr
 
 from model_service import (
     load_model,
-    GenerateInferenceOutput,
-    ExtractCleanDict,
-    FormatOutput
+    generate_inference_output,
+    extract_clean_dict,
+    format_output,
+    get_hardware_info
 )
 
 
 # ============================================================
-# CONFIGURATION
+# OUTPUT
 # ============================================================
 
-OUTPUT_DIRECTORY = "output"
+OUTPUT_DIRECTORY = (
+    "output"
+)
 
-OUTPUT_FILE = os.path.join(
-    OUTPUT_DIRECTORY,
-    "output.txt"
+
+OUTPUT_FILE = (
+
+    os.path.join(
+
+        OUTPUT_DIRECTORY,
+
+        "output.txt"
+    )
 )
 
 
@@ -25,52 +35,97 @@ OUTPUT_FILE = os.path.join(
 # FORMAT TIME
 # ============================================================
 
-def format_time(seconds):
+def format_time(
+    seconds
+):
 
-    hours = int(seconds // 3600)
-
-    minutes = int(
-        (seconds % 3600) // 60
+    hours = int(
+        seconds // 3600
     )
 
-    remaining_seconds = seconds % 60
+
+    minutes = int(
+
+        (
+            seconds % 3600
+        )
+
+        // 60
+    )
+
+
+    remaining_seconds = (
+
+        seconds % 60
+    )
+
 
     result = ""
 
+
     if hours > 0:
-        result += f"{hours}h "
+
+        result += (
+            f"{hours}h "
+        )
+
 
     if minutes > 0 or hours > 0:
-        result += f"{minutes}m "
 
-    result += f"{remaining_seconds:.6f}s"
+        result += (
+            f"{minutes}m "
+        )
+
+
+    result += (
+        f"{remaining_seconds:.6f}s"
+    )
+
 
     return result
 
 
 # ============================================================
-# LOAD UPLOADED FILE
+# READ UPLOADED FILE
 # ============================================================
 
-def load_file(uploaded_file):
+def load_file_into_textbox(
+    uploaded_file
+):
 
     if uploaded_file is None:
+
         return ""
+
 
     try:
 
         with open(
+
             uploaded_file,
+
             "r",
+
             encoding="utf-8"
+
         ) as file:
 
-            return file.read()
+            code = (
+
+                file.read()
+            )
+
+
+        return code
+
 
     except Exception as e:
 
         return (
-            "# ERROR: Could not read file.\n\n"
+
+            "# ERROR: Could not read "
+            "uploaded file.\n\n"
+
             f"# Reason: {e}"
         )
 
@@ -80,43 +135,56 @@ def load_file(uploaded_file):
 # ============================================================
 
 def analyze_code(
+
     code,
+
     model_version,
+
     model_type
+
 ):
 
     # --------------------------------------------------------
-    # CHECK INPUT
+    # INPUT CHECK
     # --------------------------------------------------------
 
     if code is None:
 
         return (
+
             "ERROR: No code was provided.",
+
             None
         )
+
 
     if not code.strip():
 
         return (
-            "ERROR: Code input is empty.\n\n"
-            "Please upload a file or paste code.",
+
+            "ERROR: Code input is empty.",
+
             None
         )
 
 
     # --------------------------------------------------------
-    # MODEL VERSION
+    # VERSION
     # --------------------------------------------------------
 
     try:
 
-        version = int(model_version)
+        version = int(
+            model_version
+        )
+
 
     except Exception:
 
         return (
+
             "ERROR: Invalid model version.",
+
             None
         )
 
@@ -128,78 +196,101 @@ def analyze_code(
     try:
 
         load_model(
+
             version=version,
+
             model_type=model_type
         )
+
 
     except Exception as e:
 
         return (
+
             "ERROR: Model loading failed.\n\n"
+
             f"Reason: {e}",
+
             None
         )
 
 
     # --------------------------------------------------------
-    # RUN INFERENCE
+    # INFERENCE
     # --------------------------------------------------------
 
     try:
 
         (
+
             output,
+
             input_tokens,
+
             generated_tokens,
+
             inference_time
-        ) = GenerateInferenceOutput(code)
+
+        ) = (
+
+            generate_inference_output(
+                code
+            )
+        )
+
 
     except Exception as e:
 
         return (
+
             "ERROR: Inference failed.\n\n"
+
             f"Reason: {e}",
+
             None
         )
 
 
     # --------------------------------------------------------
-    # CHECK OUTPUT
-    # --------------------------------------------------------
-
-    if output is None:
-
-        return (
-            "ERROR: Model did not return a response.",
-            None
-        )
-
-
-    # --------------------------------------------------------
-    # EXTRACT RESULT
+    # PARSE RESULT
     # --------------------------------------------------------
 
     try:
 
-        output_dict = ExtractCleanDict(output)
+        output_dict = (
+
+            extract_clean_dict(
+                output
+            )
+        )
+
 
     except Exception as e:
 
         return (
-            "ERROR: Could not extract model result.\n\n"
+
+            "ERROR: Could not extract "
+            "the result dictionary.\n\n"
+
             f"Reason: {e}\n\n"
+
             "Raw model output:\n\n"
+
             f"{output}",
+
             None
         )
 
 
     # --------------------------------------------------------
-    # FORMAT RESULT
+    # FORMAT
     # --------------------------------------------------------
 
-    formatted_output = FormatOutput(
-        output_dict
+    formatted_output = (
+
+        format_output(
+            output_dict
+        )
     )
 
 
@@ -210,8 +301,12 @@ def analyze_code(
     if input_tokens > 0:
 
         time_per_input_token = (
-            inference_time / input_tokens
+
+            inference_time
+
+            / input_tokens
         )
+
 
     else:
 
@@ -221,8 +316,12 @@ def analyze_code(
     if generated_tokens > 0:
 
         time_per_generated_token = (
-            inference_time / generated_tokens
+
+            inference_time
+
+            / generated_tokens
         )
+
 
     else:
 
@@ -233,47 +332,73 @@ def analyze_code(
     # FINAL OUTPUT
     # --------------------------------------------------------
 
-    final_output = formatted_output
+    final_output = (
+
+        formatted_output
+    )
+
 
     final_output += (
-        "\n"
+
         "========================================\n"
+
         "Inference Metrics\n"
+
         "========================================\n"
     )
 
-    final_output += (
-        f"Model type:                 {model_type}\n"
-    )
 
     final_output += (
-        f"Model version:              {version}\n"
+
+        f"Model type:                 "
+        f"{model_type}\n"
     )
 
-    final_output += (
-        f"Input tokens:               {input_tokens}\n"
-    )
 
     final_output += (
-        f"Generated tokens:           {generated_tokens}\n"
+
+        f"Model version:              "
+        f"{version}\n"
     )
 
+
     final_output += (
+
+        f"Input tokens:               "
+        f"{input_tokens}\n"
+    )
+
+
+    final_output += (
+
+        f"Generated tokens:           "
+        f"{generated_tokens}\n"
+    )
+
+
+    final_output += (
+
         f"Inference time:             "
         f"{format_time(inference_time)}\n"
     )
 
+
     final_output += (
+
         f"Time per input token:       "
         f"{format_time(time_per_input_token)}\n"
     )
 
+
     final_output += (
+
         f"Time per generated token:   "
         f"{format_time(time_per_generated_token)}\n"
     )
 
+
     final_output += (
+
         "========================================\n"
     )
 
@@ -283,64 +408,91 @@ def analyze_code(
     # --------------------------------------------------------
 
     os.makedirs(
+
         OUTPUT_DIRECTORY,
+
         exist_ok=True
     )
 
+
     with open(
+
         OUTPUT_FILE,
+
         "w",
+
         encoding="utf-8"
+
     ) as file:
 
         file.write(
+
             final_output
         )
 
 
-    # --------------------------------------------------------
-    # RETURN TO GRADIO
-    # --------------------------------------------------------
-
     return (
+
         final_output,
+
         OUTPUT_FILE
     )
 
 
 # ============================================================
-# GRADIO UI
+# GRADIO INTERFACE
 # ============================================================
 
 with gr.Blocks(
+
     title="Mamba Code Analyzer"
+
 ) as demo:
 
+
     gr.Markdown(
+
         """
 # Mamba Code Analyzer
 
 Upload a Mamba code file or paste code manually.
 
-The model runs **locally on your computer**.
-
-Your code and model inference are not sent to
-my GPU or to a central inference server.
+The model runs on the GPU of the machine running this application.
 """
     )
 
 
     # --------------------------------------------------------
-    # MODEL SELECTION
+    # HARDWARE
+    # --------------------------------------------------------
+
+    hardware_info = gr.Textbox(
+
+        label="Hardware",
+
+        value=get_hardware_info(),
+
+        interactive=False,
+
+        lines=6
+    )
+
+
+    # --------------------------------------------------------
+    # MODEL SETTINGS
     # --------------------------------------------------------
 
     with gr.Row():
 
+
         model_type = gr.Dropdown(
 
             choices=[
+
                 "LoRA Adapter",
+
                 "Full Model"
+
             ],
 
             value="LoRA Adapter",
@@ -352,8 +504,11 @@ my GPU or to a central inference server.
         model_version = gr.Dropdown(
 
             choices=[
+
                 "1",
+
                 "2"
+
             ],
 
             value="2",
@@ -363,7 +518,7 @@ my GPU or to a central inference server.
 
 
     # --------------------------------------------------------
-    # FILE UPLOAD
+    # FILE
     # --------------------------------------------------------
 
     uploaded_file = gr.File(
@@ -375,7 +530,7 @@ my GPU or to a central inference server.
 
 
     # --------------------------------------------------------
-    # CODE INPUT
+    # CODE
     # --------------------------------------------------------
 
     code_input = gr.Textbox(
@@ -383,8 +538,9 @@ my GPU or to a central inference server.
         label="Mamba Code",
 
         placeholder=(
-            "Upload a file or paste "
-            "your Mamba code here..."
+
+            "Upload a file above or "
+            "paste your Mamba code here..."
         ),
 
         lines=25
@@ -392,12 +548,12 @@ my GPU or to a central inference server.
 
 
     # --------------------------------------------------------
-    # LOAD FILE AUTOMATICALLY
+    # LOAD FILE
     # --------------------------------------------------------
 
     uploaded_file.change(
 
-        fn=load_file,
+        fn=load_file_into_textbox,
 
         inputs=uploaded_file,
 
@@ -406,7 +562,7 @@ my GPU or to a central inference server.
 
 
     # --------------------------------------------------------
-    # ANALYZE
+    # BUTTON
     # --------------------------------------------------------
 
     analyze_button = gr.Button(
@@ -444,7 +600,7 @@ my GPU or to a central inference server.
 
 
     # --------------------------------------------------------
-    # BUTTON ACTION
+    # ACTION
     # --------------------------------------------------------
 
     analyze_button.click(
@@ -452,14 +608,21 @@ my GPU or to a central inference server.
         fn=analyze_code,
 
         inputs=[
+
             code_input,
+
             model_version,
+
             model_type
+
         ],
 
         outputs=[
+
             result_output,
+
             output_file
+
         ]
     )
 
@@ -470,4 +633,14 @@ my GPU or to a central inference server.
 
 if __name__ == "__main__":
 
-    demo.launch()
+    demo.queue(
+
+        default_concurrency_limit=1
+    )
+
+    demo.launch(
+
+        server_name="127.0.0.1",
+
+        server_port=7860
+    )
