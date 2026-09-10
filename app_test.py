@@ -1,40 +1,21 @@
-import os
-
 import gradio as gr
 
 
 # ============================================================
-# CONFIGURATION
+# TEST FILE
 # ============================================================
 
-OUTPUT_DIRECTORY = "output"
-
-OUTPUT_FILE = os.path.join(
-    OUTPUT_DIRECTORY,
-    "output.txt"
-)
-
-
-# ============================================================
-# LOAD FILE CONTENT INTO TEXTBOX
-# ============================================================
-
-def load_file_into_textbox(
+def test_file_loading(
     uploaded_file
 ):
 
-    # --------------------------------------------------------
-    # NO FILE
-    # --------------------------------------------------------
-
     if uploaded_file is None:
 
-        return ""
+        return (
 
+            "No file selected."
+        )
 
-    # --------------------------------------------------------
-    # READ FILE
-    # --------------------------------------------------------
 
     try:
 
@@ -49,253 +30,64 @@ def load_file_into_textbox(
         ) as file:
 
             code = (
+
                 file.read()
             )
 
 
-        # ----------------------------------------------------
-        # RETURN FILE CONTENT
-        #
-        # This content will automatically appear
-        # in the manual code textbox.
-        # ----------------------------------------------------
+        return (
 
-        return code
+            "File upload test passed.\n\n"
+
+            f"Characters: "
+            f"{len(code)}\n\n"
+
+            "========================================\n"
+
+            "FILE CONTENT\n"
+
+            "========================================\n\n"
+
+            f"{code}"
+        )
 
 
     except Exception as e:
 
         return (
 
-            f"# ERROR: Could not read "
-            f"uploaded file.\n\n"
-            f"# Reason: {e}"
+            "File upload test failed.\n\n"
+
+            f"Reason: {e}"
         )
 
 
 # ============================================================
-# TEST ANALYSIS FUNCTION
-#
-# This does NOT load Mistral.
-# This does NOT require a GPU.
-# ============================================================
-
-def test_analyze_code(
-
-    code,
-
-    model_version,
-
-    model_type
-
-):
-
-    # --------------------------------------------------------
-    # CHECK INPUT
-    # --------------------------------------------------------
-
-    if code is None:
-
-        return (
-
-            "ERROR: No code was provided.",
-
-            None
-        )
-
-
-    if not code.strip():
-
-        return (
-
-            "ERROR: Code input is empty.\n\n"
-            "Please upload a file or paste "
-            "code manually.",
-
-            None
-        )
-
-
-    # --------------------------------------------------------
-    # CREATE TEST OUTPUT
-    # --------------------------------------------------------
-
-    final_output = f"""
-========================================
-MAMBA CODE ANALYZER
-GRADIO INTERFACE TEST
-========================================
-
-The Gradio interface is working.
-
-No GPU was used.
-
-No Mistral model was loaded.
-
-No LoRA model was loaded.
-
-No real AI inference was performed.
-
-========================================
-SELECTED CONFIGURATION
-========================================
-
-Model Type:
-{model_type}
-
-Model Version:
-{model_version}
-
-========================================
-CODE TO ANALYZE
-========================================
-
-{code}
-
-========================================
-TEST RESULT
-========================================
-
-The following components were tested:
-
-- Model Type selection
-- Model Version selection
-- File upload
-- Automatic file content loading
-- Manual code editing
-- Analyze button
-- Output display
-- output/output.txt creation
-- Output file download
-
-========================================
-"""
-
-
-    # --------------------------------------------------------
-    # CREATE OUTPUT DIRECTORY
-    # --------------------------------------------------------
-
-    os.makedirs(
-
-        OUTPUT_DIRECTORY,
-
-        exist_ok=True
-    )
-
-
-    # --------------------------------------------------------
-    # WRITE OUTPUT FILE
-    # --------------------------------------------------------
-
-    with open(
-
-        OUTPUT_FILE,
-
-        "w",
-
-        encoding="utf-8"
-
-    ) as file:
-
-        file.write(
-
-            final_output
-        )
-
-
-    # --------------------------------------------------------
-    # RETURN RESULT
-    # --------------------------------------------------------
-
-    return (
-
-        final_output,
-
-        OUTPUT_FILE
-    )
-
-
-# ============================================================
-# GRADIO INTERFACE
+# UI
 # ============================================================
 
 with gr.Blocks(
 
-    title="Mamba Code Analyzer - Interface Test"
+    title="Mamba Code Analyzer - Test"
 
 ) as demo:
 
 
-    # --------------------------------------------------------
-    # TITLE
-    # --------------------------------------------------------
-
     gr.Markdown(
 
         """
-# Mamba Code Analyzer
+# Mamba Code Analyzer - UI Test
 
-## Gradio Interface Test Mode
+This application only tests Gradio file upload.
 
-You can either:
+No LLM is loaded.
 
-1. Upload a code file.
-   Its content will automatically appear in the code box.
+No GPU is required.
 
-OR
-
-2. Paste/type code directly into the code box.
-
-You can edit the code before clicking Analyze Code.
-
-This test version does not load a model and does not
-require a GPU.
-        """
+No inference is performed.
+"""
     )
 
-
-    # --------------------------------------------------------
-    # MODEL SELECTION
-    # --------------------------------------------------------
-
-    with gr.Row():
-
-        model_type = gr.Dropdown(
-
-            choices=[
-
-                "LoRA Adapter",
-
-                "Full Model"
-
-            ],
-
-            value="LoRA Adapter",
-
-            label="Model Type"
-        )
-
-
-        model_version = gr.Dropdown(
-
-            choices=[
-
-                "1",
-
-                "2"
-
-            ],
-
-            value="2",
-
-            label="Model Version"
-        )
-
-
-    # --------------------------------------------------------
-    # FILE UPLOAD
-    # --------------------------------------------------------
 
     uploaded_file = gr.File(
 
@@ -305,112 +97,25 @@ require a GPU.
     )
 
 
-    # --------------------------------------------------------
-    # CODE TEXTBOX
-    # --------------------------------------------------------
+    result = gr.Textbox(
 
-    code_input = gr.Textbox(
+        label="Test Result",
 
-        label="Code to Analyze",
-
-        placeholder=(
-            "Upload a file above or paste "
-            "your Mamba code here..."
-        ),
-
-        lines=25
-    )
-
-
-    # --------------------------------------------------------
-    # AUTOMATICALLY LOAD FILE CONTENT
-    # --------------------------------------------------------
-
-    uploaded_file.change(
-
-        fn=load_file_into_textbox,
-
-        inputs=[
-
-            uploaded_file
-
-        ],
-
-        outputs=[
-
-            code_input
-
-        ]
-    )
-
-
-    # --------------------------------------------------------
-    # ANALYZE BUTTON
-    # --------------------------------------------------------
-
-    analyze_button = gr.Button(
-
-        "Analyze Code",
-
-        variant="primary"
-    )
-
-
-    # --------------------------------------------------------
-    # RESULT OUTPUT
-    # --------------------------------------------------------
-
-    result_output = gr.Textbox(
-
-        label="Analysis Result",
-
-        lines=25,
+        lines=30,
 
         interactive=False
     )
 
 
-    # --------------------------------------------------------
-    # DOWNLOAD OUTPUT
-    # --------------------------------------------------------
+    uploaded_file.change(
 
-    output_file = gr.File(
+        fn=test_file_loading,
 
-        label="Download Output File"
+        inputs=uploaded_file,
+
+        outputs=result
     )
 
-
-    # --------------------------------------------------------
-    # BUTTON ACTION
-    # --------------------------------------------------------
-
-    analyze_button.click(
-
-        fn=test_analyze_code,
-
-        inputs=[
-
-            code_input,
-
-            model_version,
-
-            model_type
-
-        ],
-
-        outputs=[
-
-            result_output,
-
-            output_file
-
-        ]
-    )
-
-
-# ============================================================
-# ENTRY POINT
-# ============================================================
 
 if __name__ == "__main__":
 
