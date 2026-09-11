@@ -213,6 +213,16 @@ The model runs on the GPU of the machine running this application.
 
 if __name__ == "__main__":
     demo.queue(default_concurrency_limit=1)
+
     port = int(os.environ.get("GRADIO_SERVER_PORT", "7860"))
-    server_name = os.environ.get("GRADIO_SERVER_NAME", "127.0.0.1")
-    demo.launch(server_name=server_name, server_port=port)
+
+    print("=" * 60)
+    print("Starting Mamba Code Analyzer")
+    print(f"Gradio server: http://0.0.0.0:{port}")
+    print(f"Port: {port}")
+    print("=" * 60)
+
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=port,
+    )
