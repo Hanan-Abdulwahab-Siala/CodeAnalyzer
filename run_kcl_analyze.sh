@@ -19,7 +19,8 @@ echo "========================================"
 echo "Mamba Code Analyzer - KCL GPU Job"
 echo "========================================"
 
-echo "Host:"
+echo
+echo "Compute node:"
 hostname
 
 echo
@@ -30,13 +31,17 @@ echo
 echo "Loading CUDA..."
 module load cuda
 
-cd "$HOME/mamba-code-analyzer"
+cd "$HOME/Mamba-Code-Analyzer"
 
 source .venv/bin/activate
 
 echo
 echo "Python:"
 python --version
+
+echo
+echo "Python executable:"
+which python
 
 echo
 echo "PyTorch:"
@@ -47,6 +52,8 @@ print('CUDA available:', torch.cuda.is_available())
 print('CUDA version:', torch.version.cuda)
 if torch.cuda.is_available():
     print('GPU:', torch.cuda.get_device_name(0))
+else:
+    raise RuntimeError('CUDA is not available')
 "
 
 echo
@@ -57,3 +64,4 @@ echo
 echo "========================================"
 echo "Job completed"
 echo "========================================"
+
