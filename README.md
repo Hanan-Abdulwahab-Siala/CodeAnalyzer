@@ -17,602 +17,970 @@ The project provides:
 
 This project **does not provide a central GPU server**.
 
-Every user runs model inference using their **own available computing resources**.
+The models run locally on the machine where the application is started.
 
-### Public Users
+The application:
 
-A user who clones this repository runs inference on their own computer or GPU provider.
+1. Loads the selected model locally.
+2. Loads the tokenizer locally.
+3. Sends the input code directly to the local model.
+4. Performs inference on the local GPU or CPU.
+5. Returns the generated analysis locally.
 
-```text
-User's computer / GPU provider
-            |
-            v
-        app.py
-            |
-            v
-    model_service.py
-            |
-            v
-       User's GPU
-```
+No project-hosted inference API is required.
 
-The public application does **not** connect to the author's KCL GPU.
+If you have a compatible NVIDIA GPU, inference can be performed using CUDA. If CUDA is not available, the application falls back to CPU execution.
 
-### Project Author on KCL CREATE
+---
 
-The project author can run the same application on a GPU allocated through KCL CREATE using Slurm.
+## Project Structure
+
+A typical project structure is:
 
 ```text
-KCL CREATE
-    |
-    v
-Slurm GPU allocation
-    |
-    v
-Allocated KCL GPU
-    |
-    v
-model_service.py
-    |
-    v
-Model inference
+Mamba-Code-Analyzer/
+│
+├── README.md
+├── requirements.txt
+│
+├── mamba_analyzer.py
+├── app.py
+│
+├── models/
+│
+├── examples/
+│   └── example.py
+│
+└── KCL/
+    └── create scripts
 ```
 
-The KCL GPU is therefore used only by the author's KCL jobs and is **not a public inference server**.
+The exact file names may differ depending on the version of the project.
+
+---
+
+## Features
+
+### Local Model Inference
+
+The application runs the language model locally. There is no requirement for a central inference server.
+
+### GPU Acceleration
+
+The application automatically detects CUDA:
+
+```python
+torch.cuda.is_available()
+```
+
+When CUDA is available, the model is loaded on the GPU. The application also detects the GPU name and available VRAM.
+
+### Automatic Data Type Selection
+
+For NVIDIA GPUs, the application automatically selects:
+
+- `bfloat16` when supported
+- `float16` otherwise
+
+For CPU execution, it uses:
+
+- `float32`
+
+Example:
+
+```text
+CUDA available : True
+Device         : cuda
+GPU            : NVIDIA ...
+Dtype          : torch.bfloat16
+```
+
+---
+
+## Supported Models
+
+The project supports both LoRA adapters and full model checkpoints.
+
+### Base Model
+
+The LoRA versions use:
+
+```
+mistralai/Mistral-7B-v0.3
+```
+
+### LoRA Adapter Models
+
+- **Version 1:** `HA-Siala/Mamba-v0.1`
+- **Version 2:** `HA-Siala/Mamba-v0.2`
+
+The LoRA workflow is:
+
+```
+Mistral 7B base model
+        +
+  Mamba LoRA adapter
+        |
+        v
+ Mamba Code Analyzer
+```
+
+### Full Models
+
+- **Version 1:** `HA-Siala/Mamba-full-v0.1`
+- **Version 2:** `HA-Siala/Mamba-full-v0.2`
+
+The full-model workflow loads the complete checkpoint directly.
+
+### Model Selection
+
+The model loader supports two versions:
+
+```
+version=1
+```
+
+and:
+
+```
+version=2
+```
+
+It also supports:
+
+```
+model_type="LoRA Adapter"
+```
+
+and:
+
+```
+model_type="Full Model"
+```
+
+**Example: Version 2 LoRA**
+
+```python
+load_model(
+    version=2,
+    model_type="LoRA Adapter",
+)
+```
+
+**Example: Version 1 LoRA**
+
+```python
+load_model(
+    version=1,
+    model_type="LoRA Adapter",
+)
+```
+
+**Example: Version 2 Full Model**
+
+```python
+load_model(
+    version=2,
+    model_type="Full Model",
+)
+```
+
+**Example: Version 1 Full Model**
+
+```python
+load_model(
+    version=1,
+    model_type="Full Model",
+)
+```
 
 ---
 
 ## Requirements
 
-### For Public Users
+Recommended:
 
-- Python 3.11
-- Git
-- NVIDIA GPU recommended
-- NVIDIA driver with CUDA support
-- Sufficient GPU VRAM
-- Internet connection for downloading the required models
+- Python 3.10+
+- PyTorch
+- Transformers
+- PEFT
+- Accelerate
+- SentencePiece
+- NVIDIA GPU with CUDA support for GPU inference
 
-A CUDA-capable NVIDIA GPU is strongly recommended because the project uses large language models.
-
-CPU execution may be possible, but inference can be extremely slow or impractical for large models.
-
-### For KCL CREATE
-
-The KCL workflow additionally requires:
-
-- A KCL CREATE account with HPC access
-- SSH access to the KCL HPC system
-- Slurm
-- Access to the KCL GPU partition
-- A suitable Python virtual environment
-
-The KCL-specific setup is described separately below.
+CPU inference is also supported, although it can be significantly slower.
 
 ---
 
-# Installation for Public Users
+## Installation
 
-## 1. Clone the Repository
-
-Replace `YOUR_REPOSITORY_URL` with the actual GitHub repository URL.
+Clone the repository:
 
 ```bash
-git clone YOUR_REPOSITORY_URL
-cd mamba-code-analyzer
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd Mamba-Code-Analyzer
 ```
 
----
-
-## 2. Create a Python Virtual Environment
+Create a virtual environment:
 
 ```bash
 python -m venv .venv
 ```
 
-### Windows Command Prompt
+Activate the virtual environment.
 
-```bat
-.venv\Scripts\activate
-```
-
-### Windows PowerShell
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-### Linux / macOS
+**Linux / macOS**
 
 ```bash
 source .venv/bin/activate
 ```
 
-After activation, the terminal should show something similar to:
-
-```text
-(.venv)
-```
-
----
-
-# Install PyTorch
-
-PyTorch is installed separately from the project's main requirements because the appropriate PyTorch package depends on the user's operating system, GPU, NVIDIA driver, and CUDA environment.
-
-Install a CUDA-compatible PyTorch version appropriate for your system.
-
-After installation, verify the GPU:
+**Windows**
 
 ```bash
-python -c "import torch; print('PyTorch:', torch.__version__); print('CUDA available:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
+.venv\Scripts\activate
 ```
 
-A working CUDA installation should report something similar to:
-
-```text
-PyTorch: <version>
-CUDA available: True
-GPU: <your NVIDIA GPU>
-```
-
-If it reports:
-
-```text
-CUDA available: False
-```
-
-the application may fall back to CPU, but large-model inference may be extremely slow or impractical.
-
-You can also check the NVIDIA driver directly with:
-
-```bash
-nvidia-smi
-```
-
----
-
-# Install Project Dependencies
-
-After installing PyTorch:
+Upgrade pip:
 
 ```bash
 python -m pip install --upgrade pip
+```
+
+Install the dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-The `requirements.txt` file contains the application and model-related Python dependencies.
+### PyTorch and CUDA
 
-PyTorch is intentionally not pinned in `requirements.txt` so that users can install a PyTorch build appropriate for their own hardware and environment.
+For GPU inference, install a PyTorch build compatible with your NVIDIA driver and CUDA environment.
 
----
-
-# Run the Command-Line Analyzer
-
-The command-line analyzer accepts a text file containing Mamba code.
-
-A sample input file is included in:
-
-```text
-input/sample.txt
-```
-
-Run:
-
-```bash
-python analyze.py input/sample.txt
-```
-
-The generated analysis is written to:
-
-```text
-output/output.txt
-```
-
----
-
-# Run the Gradio Web Application
-
-Start the local Gradio interface:
-
-```bash
-python app.py
-```
-
-The application normally runs at:
-
-```text
-http://127.0.0.1:7860
-```
-
-Open the address in a web browser.
-
-The interface provides:
-
-- Hardware information
-- Model selection
-- Model version selection
-- File upload
-- Mamba code input
-- Code analysis
-- Formatted analysis results
-- Downloadable output
-
-The application automatically detects whether CUDA is available.
-
----
-
-# Model Options
-
-The application supports two model modes.
-
-## LoRA Adapter
-
-The LoRA configuration uses:
-
-```text
-mistralai/Mistral-7B-v0.3
-```
-
-as the base model and loads a Mamba LoRA adapter.
-
-Available LoRA adapters:
-
-```text
-HA-Siala/Mamba-v0.1
-HA-Siala/Mamba-v0.2
-```
-
-## Full Model
-
-The full-model configuration uses:
-
-```text
-HA-Siala/Mamba-full-v0.1
-HA-Siala/Mamba-full-v0.2
-```
-
-The required model files are downloaded from Hugging Face when they are needed.
-
-The first run may therefore take significantly longer than subsequent runs.
-
----
-
-# GPU Usage
-
-The project does not hard-code a particular GPU.
-
-The application checks whether CUDA is available through PyTorch.
-
-When a CUDA-capable GPU is available, the model is loaded for GPU inference.
-
-For example:
-
-```text
-Public User A
-     |
-     v
-Their NVIDIA GPU
-```
-
-is completely independent from:
-
-```text
-Project Author
-     |
-     v
-KCL CREATE allocated GPU
-```
-
-No public user is given access to the author's KCL GPU.
-
----
-
-# KCL CREATE HPC Usage
-
-The repository contains two KCL-specific Slurm scripts:
-
-```text
-run_kcl_analyze.sh
-run_kcl_gradio.sh
-```
-
-These scripts are intended for the **project author's KCL CREATE workflow**.
-
-## Important
-
-**Public users do not need to run these scripts.**
-
-They should follow the normal installation and usage instructions above.
-
-The KCL scripts request GPUs from the KCL Slurm scheduler and are specific to the KCL HPC environment.
-
----
-
-## KCL Command-Line Analysis
-
-After configuring the Python environment on KCL, submit the analysis job with:
-
-```bash
-sbatch run_kcl_analyze.sh
-```
-
-Check the job status with:
-
-```bash
-squeue -u $USER
-```
-
-The Slurm output and error files are configured by the script.
-
-The job requests a GPU and runs:
-
-```text
-analyze.py
-    |
-    v
-model_service.py
-    |
-    v
-Allocated KCL GPU
-```
-
----
-
-## KCL Gradio Application
-
-The Gradio interface can also be started inside a KCL GPU job:
-
-```bash
-sbatch run_kcl_gradio.sh
-```
-
-The Gradio service runs on the allocated KCL compute node.
-
-The service should **not** be exposed as a public Internet service.
-
-Instead, use SSH port forwarding from your own computer to access the private Gradio application.
-
-The exact tunnel command depends on the compute node and port assigned to the job.
-
----
-
-# GitHub Actions
-
-GitHub Actions is used for automated software validation.
-
-The GitHub Actions workflow performs CPU-based checks such as:
-
-- Installing Python
-- Installing project dependencies
-- Installing CPU-only PyTorch
-- Compiling Python files
-- Checking the repository structure
-- Checking the sample input
-- Creating a CI output artifact
-
-GitHub Actions does **not** perform model inference.
-
-It does not require an NVIDIA GPU.
-
-Therefore:
-
-```text
-GitHub Actions
-      |
-      v
-CPU checks only
-```
-
-while actual inference is performed separately:
-
-```text
-User's computer
-      |
-      v
-User's GPU
-```
-
-or:
-
-```text
-KCL Slurm job
-      |
-      v
-Allocated KCL GPU
-```
-
----
-
-# Repository Structure
-
-```text
-mamba-code-analyzer/
-│
-├── .github/
-│   └── workflows/
-│       └── checks.yml
-│
-├── input/
-│   └── sample.txt
-│
-├── output/
-│   └── .gitkeep
-│
-├── analyze.py
-├── app.py
-├── app_test.py
-├── model_service.py
-├── requirements.txt
-├── run_kcl_analyze.sh
-├── run_kcl_gradio.sh
-└── README.md
-```
-
----
-
-# KCL Scripts vs Public Usage
-
-The two `.sh` files are **not public inference scripts**.
-
-| File | Purpose | Public Users |
-|---|---|---|
-| `analyze.py` | Command-line inference | Yes |
-| `app.py` | Local Gradio application | Yes |
-| `model_service.py` | Model loading and inference | Yes |
-| `requirements.txt` | Python dependencies | Yes |
-| `run_kcl_analyze.sh` | KCL Slurm GPU analysis | No |
-| `run_kcl_gradio.sh` | KCL Slurm Gradio application | No |
-| `.github/workflows/checks.yml` | Automated CPU checks | Automatic |
-
-Public users should normally use:
-
-```bash
-python analyze.py input/sample.txt
-```
-
-or:
-
-```bash
-python app.py
-```
-
-They do **not** need to use:
-
-```bash
-sbatch run_kcl_analyze.sh
-```
-
-or:
-
-```bash
-sbatch run_kcl_gradio.sh
-```
-
----
-
-# Troubleshooting
-
-## CUDA Is Not Available
-
-Check PyTorch:
+Check whether CUDA is available:
 
 ```bash
 python -c "import torch; print(torch.cuda.is_available())"
 ```
 
-Check the NVIDIA driver:
+Expected GPU result:
 
-```bash
-nvidia-smi
+```
+True
 ```
 
-If CUDA is unavailable, check:
+Check the detected GPU:
 
-- NVIDIA driver installation
-- PyTorch installation
-- CUDA compatibility
-- GPU visibility
-- Whether another process is using the GPU
+```bash
+python -c "import torch; print(torch.cuda.get_device_name(0))"
+```
+
+Check the installed PyTorch and CUDA versions:
+
+```bash
+python -c "import torch; print('PyTorch:', torch.__version__); print('CUDA:', torch.version.cuda)"
+```
+
+### Hugging Face Models
+
+The first time a model is loaded, Hugging Face may download the required model files to the local Hugging Face cache.
+
+For LoRA models, the application downloads:
+
+```
+mistralai/Mistral-7B-v0.3
+```
+
+and the selected adapter.
+
+For full models, the selected full checkpoint is downloaded.
+
+Make sure the machine has:
+
+- Internet access during the first model download
+- Enough disk space
+- Enough RAM
+- Enough GPU VRAM for the selected model
+
+After the model has been downloaded, the Hugging Face cache can allow subsequent runs to use the local files.
 
 ---
 
-## Out of GPU Memory
+## Running the Command-Line Analyzer
 
-The models require substantial GPU memory.
+If the project contains a command-line entry point, run it according to the project's entry script.
 
-If you receive a CUDA out-of-memory error:
-
-1. Check GPU usage:
+For example:
 
 ```bash
-nvidia-smi
+python mamba_analyzer.py
 ```
 
-2. Close other GPU applications.
-3. Make sure the intended model configuration is selected.
-4. Use a GPU with more available VRAM if necessary.
-
----
-
-## First Run Is Slow
-
-The first run may be slow because the required model files must be downloaded from Hugging Face.
-
-Later runs can reuse the locally cached model files.
-
----
-
-## Gradio Does Not Start
-
-Check that the virtual environment is activated:
-
-```bash
-python --version
-```
-
-Check that Gradio is installed:
-
-```bash
-python -c "import gradio; print(gradio.__version__)"
-```
-
-Then start the application again:
+or:
 
 ```bash
 python app.py
 ```
 
----
+The application should display hardware information when it starts.
 
-# Development Checks
+Example:
 
-The Python files can be compiled manually with:
-
-```bash
-python -m py_compile analyze.py
-python -m py_compile app.py
-python -m py_compile app_test.py
-python -m py_compile model_service.py
+```text
+============================================================
+MAMBA CODE ANALYZER - HARDWARE
+============================================================
+CUDA available : True
+Device         : cuda
+GPU            : NVIDIA ...
+PyTorch        : 2.x.x
+CUDA version   : 12.x
+Dtype          : torch.bfloat16
+============================================================
 ```
 
-Run the application test with:
+---
+
+## Gradio Web Interface
+
+If the project includes a Gradio interface, start the application using:
 
 ```bash
-python app_test.py
+python app.py
+```
+
+The terminal will provide a local URL, usually similar to:
+
+```
+http://127.0.0.1:7860
+```
+
+Open that address in a web browser.
+
+The Gradio interface can be used to:
+
+- Select the model version
+- Select LoRA or full model
+- Enter Mamba/Python code
+- Run the analyzer
+- View detected flaws
+- View refactored versions
+- View inference information
+
+---
+
+## Basic Python Usage
+
+The main model-loading function is:
+
+```python
+load_model()
+```
+
+Example:
+
+```python
+load_model(
+    version=2,
+    model_type="LoRA Adapter",
+)
+```
+
+Then provide code to:
+
+```python
+generate_inference_output()
+```
+
+Example:
+
+```python
+code = """
+def calculate(x):
+    result = x * 2
+    return result
+"""
+
+output, input_tokens, generated_tokens, inference_time = (
+    generate_inference_output(code)
+)
+
+print(output)
+```
+
+### Inference Output
+
+The inference function returns:
+
+- `output`
+- `input_tokens`
+- `generated_tokens`
+- `inference_time`
+
+Example:
+
+```python
+output, input_tokens, generated_tokens, inference_time = (
+    generate_inference_output(code)
+)
+
+print("Output:")
+print(output)
+print("Input tokens:", input_tokens)
+print("Generated tokens:", generated_tokens)
+print("Inference time:", inference_time)
 ```
 
 ---
 
-# Data and Model Downloads
+## Expected Model Response
 
-The application downloads model files from Hugging Face when required.
+The model is instructed to return a Python dictionary containing exactly two top-level keys:
 
-The models are not hosted by this repository.
+```python
+{
+    "Flaws": ...,
+    "Refactored Versions": ...
+}
+```
 
-Users should ensure that they have:
+For example:
 
-- Internet access
-- Enough local disk space
-- Enough GPU memory for the selected model
-- Permission to access and use the referenced models under their respective licenses
+```python
+{
+    "Flaws": [
+        {
+            "Flaw": "Example flaw",
+            "Explanation": "Explanation of the detected problem."
+        }
+    ],
+    "Refactored Versions": [
+        "def corrected_function():\n    pass"
+    ]
+}
+```
+
+The actual response depends on the model and the submitted code.
+
+### Output Parsing
+
+The project includes a function for extracting the dictionary from the model output:
+
+```python
+extract_clean_dict()
+```
+
+The function:
+
+1. Searches for the generated dictionary.
+2. Locates the opening `{`.
+3. Tracks nested braces.
+4. Handles strings containing braces.
+5. Finds the matching closing `}`.
+6. Parses the result using `ast.literal_eval()`.
+7. Verifies that the result is a dictionary.
+8. Verifies the `Flaws` key.
+9. Verifies the `Refactored Versions` key.
+
+### Formatting Output
+
+The function:
+
+```python
+format_output()
+```
+
+converts the parsed dictionary into readable output.
+
+Example:
+
+```text
+Flaws:
+- Example flaw: Explanation of the problem.
+
+Refactored versions code:
+def corrected_function():
+    ...
+```
 
 ---
 
-# Security and Deployment
+## Hardware Information
 
-This project is intended primarily for **local execution**.
+The application provides hardware information through:
 
-The Gradio application should normally be bound to the local machine when running locally.
+```python
+get_hardware_info()
+```
 
-Do not expose the application to the public Internet unless you have intentionally configured and secured the deployment.
+Example GPU output:
 
-The KCL Gradio workflow is intended to remain private to the KCL environment and should be accessed through SSH tunneling.
+```text
+GPU: NVIDIA ...
+CUDA: 12.x
+PyTorch: 2.x.x
+VRAM: 20.50 GB free / 24.00 GB total
+Compute capability: (8, 9)
+Dtype: torch.bfloat16
+```
+
+On CPU:
+
+```text
+GPU: CPU
+PyTorch: 2.x.x
+CUDA: Not available
+```
 
 ---
 
-# License
+## VRAM Management
 
-Add the project's license information here.
+Large language models require significant GPU memory.
 
-If this project uses an open-source license, replace this section with the appropriate license name and license text or a reference to the license file.
+The application includes:
+
+```python
+clear_model()
+```
+
+which removes the currently loaded model and clears the CUDA cache.
+
+When a different model is requested, the application clears the previous model before loading the new one. When the same model is requested again, the application reuses the existing model instead of loading it again.
+
+Example:
+
+```python
+load_model(
+    version=2,
+    model_type="LoRA Adapter",
+)
+# The second call reuses the already loaded model.
+load_model(
+    version=2,
+    model_type="LoRA Adapter",
+)
+```
+
+---
+
+## Generation Configuration
+
+The maximum number of newly generated tokens is controlled by:
+
+```python
+MAX_NEW_TOKENS = 4096
+```
+
+You can reduce this value if GPU memory is limited:
+
+```python
+MAX_NEW_TOKENS = 2048
+```
+
+Or increase it if your hardware has sufficient resources:
+
+```python
+MAX_NEW_TOKENS = 8192
+```
+
+Larger values can increase:
+
+- GPU memory usage
+- Inference time
+- Generated response length
+
+### Deterministic Generation
+
+The default configuration is:
+
+```python
+DO_SAMPLE = False
+```
+
+This is intentional for code analysis because deterministic generation generally makes results more reproducible.
+
+Sampling can be enabled with:
+
+```python
+DO_SAMPLE = True
+```
+
+if more varied responses are desired.
+
+### Inference Timing
+
+The application measures inference time using:
+
+```python
+time.perf_counter()
+```
+
+CUDA synchronization is performed before and after generation. This is important because CUDA operations are asynchronous. The reported inference time therefore measures the actual model generation operation more accurately than a simple unsynchronized timer.
+
+---
+
+## Transformers Compatibility
+
+Depending on the installed version of Transformers, the model-loading argument may be:
+
+```python
+dtype=DTYPE
+```
+
+or:
+
+```python
+torch_dtype=DTYPE
+```
+
+The current implementation uses:
+
+```python
+dtype=DTYPE
+```
+
+If your Transformers installation reports an error similar to:
+
+```text
+TypeError: ... got an unexpected keyword argument 'dtype'
+```
+
+replace:
+
+```python
+dtype=DTYPE
+```
+
+with:
+
+```python
+torch_dtype=DTYPE
+```
+
+inside the model-loading function.
+
+---
+
+## Common Problems
+
+### CUDA Is Not Available
+
+If:
+
+```python
+torch.cuda.is_available()
+```
+
+returns:
+
+```
+False
+```
+
+check:
+
+- NVIDIA driver installation
+- PyTorch installation
+- CUDA compatibility
+- GPU visibility
+- Python environment
+
+Run:
+
+```bash
+python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available())"
+```
+
+### CUDA Out of Memory
+
+If you receive:
+
+```
+CUDA out of memory
+```
+
+try:
+
+1. Reducing `MAX_NEW_TOKENS`.
+2. Closing other GPU applications.
+3. Clearing the currently loaded model.
+4. Using the LoRA configuration if appropriate.
+5. Using a GPU with more VRAM.
+6. Checking available VRAM before loading the model.
+
+You can check VRAM with:
+
+```python
+get_hardware_info()
+```
+
+### Model Loading Takes a Long Time
+
+The first model load can take longer because model files may need to be downloaded. Subsequent loads can be faster when the files are already available in the local Hugging Face cache.
+
+### LoRA Adapter Loading Error
+
+When using:
+
+```python
+model_type="LoRA Adapter"
+```
+
+the application loads:
+
+```
+mistralai/Mistral-7B-v0.3
+```
+
+as the base model and then attaches the selected adapter. The adapter must be compatible with the selected base model.
+
+### Dictionary Parsing Error
+
+If the model does not return a valid dictionary, you may see:
+
+```text
+ValueError: Could not parse model output as a Python dictionary
+```
+
+Possible causes include:
+
+- Incomplete model output
+- Invalid Python syntax
+- Markdown instead of a dictionary
+- Extra text around the result
+- Incorrect quotation marks
+- Malformed nested dictionaries
+- Output being truncated
+
+---
+
+## Security
+
+The generated code should be treated as **untrusted model output**.
+
+Do not automatically execute generated code. For example, do not pass model output directly to:
+
+```python
+exec()
+```
+
+or:
+
+```python
+eval()
+```
+
+The parser uses:
+
+```python
+ast.literal_eval()
+```
+
+to parse the expected dictionary instead of executing arbitrary Python expressions.
+
+Generated refactored code should still be manually reviewed and tested before execution.
+
+---
+
+## Local Execution
+
+This project is designed for local inference. The basic architecture is:
+
+```
+User
+  |
+  v
+Local Application
+  |
+  v
+Tokenizer
+  |
+  v
+Local Mamba/Mistral Model
+  |
+  v
+Local GPU / CPU
+  |
+  v
+Generated Analysis
+  |
+  v
+User
+```
+
+There is no requirement for:
+
+```
+User
+  |
+  v
+Central GPU Server
+  |
+  v
+Remote Model
+```
+
+unless you choose to build such infrastructure separately.
+
+---
+
+## KCL CREATE HPC Workflow
+
+The repository may include optional KCL CREATE scripts for running the project in an HPC/GPU environment.
+
+These scripts are intended for the project author's workflow and are not required for normal local execution.
+
+If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
+
+---
+
+## Recommended Project Workflow
+
+A typical workflow is:
+
+```
+1. Start the application
+        |
+        v
+2. Detect GPU / CPU
+        |
+        v
+3. Select model
+        |
+        +---- LoRA Adapter
+        |
+        +---- Full Model
+        |
+        v
+4. Load tokenizer
+        |
+        v
+5. Load model
+        |
+        v
+6. Submit Mamba code
+        |
+        v
+7. Generate analysis
+        |
+        v
+8. Extract result dictionary
+        |
+        v
+9. Validate result
+        |
+        v
+10. Display flaws
+        |
+        v
+11. Display refactored code
+```
+
+---
+
+## Limitations
+
+The analyzer is based on a language model and therefore does not guarantee that every analysis is correct.
+
+The model may:
+
+- Miss bugs
+- Report false positives
+- Produce incorrect explanations
+- Produce incomplete refactoring
+- Produce syntactically invalid code
+- Produce logically incorrect code
+- Return malformed structured output
+
+Generated code should always be reviewed and tested.
+
+---
+
+## Model and Repository Access
+
+The project uses models hosted on Hugging Face. You may need to make sure the required model repositories are accessible from your environment.
+
+Model identifiers used by the project include:
+
+- `mistralai/Mistral-7B-v0.3`
+- `HA-Siala/Mamba-v0.1`
+- `HA-Siala/Mamba-v0.2`
+- `HA-Siala/Mamba-full-v0.1`
+- `HA-Siala/Mamba-full-v0.2`
+
+Please review the applicable model licenses and terms before redistributing model files or using them commercially.
+
+---
+
+## Development
+
+Install the project dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the application locally:
+
+```bash
+python app.py
+```
+
+or use the appropriate entry point for the specific project version.
+
+---
+
+## Contributing
+
+Contributions are welcome.
+
+Before submitting a change:
+
+1. Test the application locally.
+2. Verify model loading.
+3. Test both CPU and GPU behavior when possible.
+4. Check LoRA loading.
+5. Check full-model loading.
+6. Test model switching.
+7. Test malformed model output.
+8. Check that generated code is not automatically executed.
+
+---
+
+## License
+
+Add the project's license here.
+
+For example:
+
+```
+MIT License
+```
+
+If the project uses a different license, replace the above with the actual license.
+
+Note that the project's license does not necessarily change the licenses or terms of the underlying models.
+
+---
+
+## Acknowledgements
+
+This project uses:
+
+- PyTorch
+- Hugging Face Transformers
+- Hugging Face PEFT
+- Hugging Face Accelerate
+- Mistral 7B
+- HA-Siala Mamba model checkpoints
+- Gradio
+- KCL CREATE HPC infrastructure, where applicable
+
+---
+
+## Author
+
+**HA-Siala**
+
+Mamba Code Analyzer project.
