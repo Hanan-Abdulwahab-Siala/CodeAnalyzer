@@ -19,6 +19,7 @@ echo "========================================"
 echo "Mamba Code Analyzer - KCL Gradio"
 echo "========================================"
 
+echo
 echo "Compute node:"
 hostname
 
@@ -26,22 +27,46 @@ echo
 echo "GPU:"
 nvidia-smi
 
+echo
+echo "Loading CUDA..."
 module load cuda
 
-cd "$HOME/mamba-code-analyzer"
+cd "$HOME/Mamba-Code-Analyzer"
 
 source .venv/bin/activate
 
-# Choose a port for this Gradio session.
-export GRADIO_SERVER_PORT=7860
+echo
+echo "Python:"
+python --version
 
-# The exact interface will be determined on the compute node.
-export GRADIO_SERVER_NAME=$(hostname -I | tr ' ' '\n' | grep '^10\.211\.4\.' | head -n 1)
+echo
+echo "Python executable:"
+which python
+
+echo
+echo "PyTorch:"
+python -c "
+import torch
+print('PyTorch:', torch.__version__)
+print('CUDA available:', torch.cuda.is_available())
+print('CUDA version:', torch.version.cuda)
+if torch.cuda.is_available():
+    print('GPU:', torch.cuda.get_device_name(0))
+else:
+    raise RuntimeError('CUDA is not available')
+"
+
+# Gradio configuration
+export GRADIO_SERVER_PORT=7860
+export GRADIO_SERVER_NAME=0.0.0.0
 
 echo
 echo "Gradio server:"
-echo "Address: $GRADIO_SERVER_NAME"
-echo "Port:    $GRADIO_SERVER_PORT"
+echo "Host: $GRADIO_SERVER_NAME"
+echo "Port: $GRADIO_SERVER_PORT"
+echo
+echo "Compute node:"
+hostname
 
 echo
 echo "Starting Gradio..."
