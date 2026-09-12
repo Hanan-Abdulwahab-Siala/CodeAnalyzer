@@ -293,7 +293,7 @@ MIT License
 
 ---
 
-## Author
+## Contact
 
 **HA-Siala**
 
