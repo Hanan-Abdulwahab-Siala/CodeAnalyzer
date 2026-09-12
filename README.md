@@ -291,8 +291,6 @@ Please review the applicable model licenses and terms before redistributing mode
 
 MIT License
 
-```
-
 ---
 
 ## Author
