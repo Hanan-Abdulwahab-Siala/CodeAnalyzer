@@ -127,8 +127,10 @@ pip install -r requirements.txt
 ```
 
 ---
+## Running
+---
 
-## Running the Command-Line Analyze
+### 1) Running by the Command-Line 
 
 If the project contains a command-line entry point, run it according to the project's entry script.
 
@@ -157,7 +159,7 @@ Dtype          : torch.bfloat16
 
 ---
 
-## Gradio Web Interface
+### 2) Running by Gradio Web Interface
 
 If the project includes a Gradio interface, start the application using:
 
@@ -185,7 +187,7 @@ The Gradio interface can be used to:
 
 ---
 
-## KCL CREATE HPC Workflow
+### 3) Running by using KCL CREATE HPC Workflow
 
 The repository may include optional KCL CREATE scripts for running the project in an HPC/GPU environment.
 
