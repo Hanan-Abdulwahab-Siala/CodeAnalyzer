@@ -287,19 +287,19 @@ cat input/sample.txt
 Run:
 
 ```bash
-cat run_mamba.sh
+cat KCL/run_mamba.sh
 ```
 
 Then:
 
 ```bash
-chmod +x run_kcl_analyze.sh
+chmod +x KCL/run_kcl_analyze.sh
 ```
 
 Check the file:
 
 ```bash
-ls -l run_kcl_analyze.sh
+ls -l KCL/run_kcl_analyze.sh
 ```
 
 You should see executable permissions, for example:
@@ -315,7 +315,7 @@ You should see executable permissions, for example:
 Submit the script using:
 
 ```bash
-sbatch run_kcl_analyze.sh
+sbatch KCL/run_kcl_analyze.sh
 ```
 
 You should receive something similar to:
