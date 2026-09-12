@@ -287,7 +287,7 @@ cat input/sample.txt
 Run:
 
 ```bash
-cat KCL/run_mamba.sh
+cat KCL/run_kcl_analyze.sh
 ```
 
 Then:
