@@ -231,7 +231,7 @@ pwd
 
 ---
 
-## 3. Check the Python Virtual Environment
+#### 3. Check the Python Virtual Environment
 
 The project should contain a Python virtual environment:
 
@@ -265,7 +265,7 @@ It should point to something similar to:
 
 ---
 
-## 4. Verify the Input File Exists
+#### 4. Verify the Input File Exists
 
 Check the input file:
 
@@ -282,7 +282,7 @@ cat input/sample.txt
 
 ---
 
-## 5. Check SLURM script and Make the Script Executable
+#### 5. Check SLURM script and Make the Script Executable
 
 Run:
 
@@ -310,7 +310,7 @@ You should see executable permissions, for example:
 
 ---
 
-## 6. Submit the SLURM Job
+#### 6. Submit the SLURM Job
 
 Submit the script using:
 
@@ -334,7 +334,7 @@ Your JOBID will be different each time you submit a new job.
 
 ---
 
-## 7. Check Whether the Job Is Running
+#### 7. Check Whether the Job Is Running
 
 Use:
 
@@ -370,7 +370,7 @@ If you see `R`, the job is currently running.
 
 ---
 
-## 8. Monitor the Job Continuously
+#### 8. Monitor the Job Continuously
 
 You can monitor the job every 2 seconds:
 
@@ -390,7 +390,7 @@ again whenever you want to check the status.
 
 ---
 
-## 9. Monitor the Output File
+#### 9. Monitor the Output File
 
 The SLURM script contains:
 
@@ -420,7 +420,7 @@ Press `Ctrl + C` to stop monitoring.
 
 ---
 
-## 10. Monitor Errors
+#### 10. Monitor Errors
 
 The SLURM script contains:
 
@@ -450,7 +450,7 @@ If the file is empty, that is usually a good sign.
 
 ---
 
-## 11. Check the Generated Results
+#### 11. Check the Generated Results
 
 Finally, if everything succeeds:
 
