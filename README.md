@@ -188,9 +188,8 @@ The Gradio interface can be used to:
 
 ### 3) Running by using KCL CREATE HPC Workflow
 
-The repository may include optional KCL CREATE scripts for running the project in an HPC/GPU environment.
+We have optional KCL CREATE scripts for running the project in an HPC/GPU environment.
 
-These scripts are intended for the project author's workflow and are not required for normal local execution.
 
 If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
 
