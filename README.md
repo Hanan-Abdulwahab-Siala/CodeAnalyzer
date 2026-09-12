@@ -295,6 +295,7 @@ MIT License
 
 ## Contact
 
-**HA-Siala**
+Student: hanan.siala@kcl.ac.uk
+Supervisor: kevin.lano@kcl.ac.uk
 
 Mamba Code Analyzer project.
