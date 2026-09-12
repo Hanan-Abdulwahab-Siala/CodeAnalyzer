@@ -8,16 +8,11 @@ from model_service import (
     format_output,
     is_model_loaded,
 )
-# ============================================================
-# DEFAULT CONFIGURATION
-# ============================================================
 DEFAULT_MODEL_VERSION = 2
 DEFAULT_MODEL_TYPE = "LoRA Adapter"
 OUTPUT_DIRECTORY = "output"
 OUTPUT_FILE = os.path.join(OUTPUT_DIRECTORY, "output.txt")
-# ============================================================
-# FORMAT TIME
-# ============================================================
+
 def format_time(seconds):
     hours = int(seconds // 3600)
     minutes = int((seconds % 3600) // 60)
@@ -29,9 +24,7 @@ def format_time(seconds):
         result += f"{minutes}m "
     result += f"{remaining_seconds:.6f}s"
     return result
-# ============================================================
-# COMMAND-LINE ARGUMENTS
-# ============================================================
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description=(
@@ -75,9 +68,7 @@ def parse_arguments():
         ),
     )
     return parser.parse_args()
-# ============================================================
-# MAIN
-# ============================================================
+
 def main():
     args = parse_arguments()
     input_file = args.input_file
@@ -87,18 +78,14 @@ def main():
     print("Starting analyzer...", flush=True,)
     print(f"Model version: {model_version}", flush=True,)
     print(f"Model type: {model_type}", flush=True,)
-    # --------------------------------------------------------
-    # CHECK FILE
-    # --------------------------------------------------------
+
     if not os.path.isfile(input_file):
         print(f"ERROR: File does not exist: " f"{input_file}")
         raise SystemExit(1)
     if os.path.getsize(input_file) == 0:
         print("ERROR: Input file is empty.")
         raise SystemExit(1)
-    # --------------------------------------------------------
-    # READ FILE
-    # --------------------------------------------------------
+
     try:
         with open(input_file, "r", encoding="utf-8",) as file:
             code = file.read()
@@ -107,9 +94,7 @@ def main():
         print(f"Reason: {e}")
         raise SystemExit(1)
     print(f"Input characters: {len(code)}", flush=True,)
-    # --------------------------------------------------------
-    # LOAD MODEL: The model is loaded exactly once for this run.
-    # --------------------------------------------------------
+
     print("Loading model...", flush=True,)
     try:
         load_model(version=model_version, model_type=model_type,)
@@ -117,17 +102,12 @@ def main():
         print("ERROR: Model loading failed.")
         print(f"Reason: {e}")
         raise SystemExit(1)
-    # --------------------------------------------------------
-    # VERIFY MODEL
-    # --------------------------------------------------------
+
     if not is_model_loaded():
         print("ERROR: Model was not loaded.")
         raise SystemExit(1)
     print("Model loaded successfully.", flush=True,)
-    # --------------------------------------------------------
-    # INFERENCE
-    # IMPORTANT: generate_inference_output() does NOT reload the model.
-    # --------------------------------------------------------
+
     print("Starting inference...", flush=True,)
     try:
         (output, input_tokens, generated_tokens, inference_time,) = generate_inference_output(code)
@@ -138,9 +118,7 @@ def main():
     if output is None or not str(output).strip():
         print("ERROR: Model returned empty output.")
         raise SystemExit(1)
-    # --------------------------------------------------------
-    # PARSE
-    # --------------------------------------------------------
+
     try:
         output_dict = extract_clean_dict(output)
     except Exception as e:
@@ -159,18 +137,12 @@ def main():
         print(f"Reason: {e}")
         print(f"Raw output saved to: {raw_file}")
         raise SystemExit(1)
-    # --------------------------------------------------------
-    # FORMAT
-    # --------------------------------------------------------
+
     formatted_output = format_output(output_dict)
-    # --------------------------------------------------------
-    # METRICS
-    # --------------------------------------------------------
+
     time_per_input_token = (inference_time / input_tokens if input_tokens > 0 else 0.0)
     time_per_generated_token = (inference_time / generated_tokens if generated_tokens > 0 else 0.0)
-    # --------------------------------------------------------
-    # FINAL OUTPUT
-    # --------------------------------------------------------
+
     final_output = formatted_output
     final_output += (
         "========================================\n"
@@ -188,9 +160,7 @@ def main():
         f"{format_time(time_per_generated_token)}\n"
         "========================================\n"
     )    
-    # --------------------------------------------------------
-    # SAVE
-    # --------------------------------------------------------
+
     output_directory = (os.path.dirname(output_file))
     if output_directory:
         os.makedirs(output_directory, exist_ok=True,)
@@ -201,14 +171,10 @@ def main():
         print("ERROR: Could not save output file.")
         print(f"Reason: {e}")
         raise SystemExit(1)
-    # --------------------------------------------------------
-    # PRINT
-    # --------------------------------------------------------
+
     print()
     print(final_output)
     print(f"Output saved to: {output_file}")
-# ============================================================
-# ENTRY POINT
-# ============================================================
+
 if __name__ == "__main__":
     main()
