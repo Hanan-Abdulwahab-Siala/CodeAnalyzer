@@ -33,7 +33,9 @@ Mamba-Code-Analyzer/
 │   └── output.txt
 │
 └── KCL/
-    └── create scripts
+    └── run_kcl_analyze.sh
+    └── run_kcl_gradio.sh
+
 ```
 
 
@@ -88,7 +90,7 @@ Recommended:
 Clone the repository:
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/HA-Siala/Mamba-Code-Analyzer.git
 cd Mamba-Code-Analyzer
 ```
 
@@ -183,6 +185,16 @@ The Gradio interface can be used to:
 
 ---
 
+## KCL CREATE HPC Workflow
+
+The repository may include optional KCL CREATE scripts for running the project in an HPC/GPU environment.
+
+These scripts are intended for the project author's workflow and are not required for normal local execution.
+
+If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
+
+---
+
 ## Expected Model Response
 
 The model is instructed to return a Python dictionary containing exactly two top-level keys:
@@ -257,22 +269,8 @@ VRAM: 20.50 GB free / 24.00 GB total
 Compute capability: (8, 9)
 Dtype: torch.bfloat16
 ```
-
 ---
 
-## Local Execution
-
----
-
-## KCL CREATE HPC Workflow
-
-The repository may include optional KCL CREATE scripts for running the project in an HPC/GPU environment.
-
-These scripts are intended for the project author's workflow and are not required for normal local execution.
-
-If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
-
----
 ## Model and Repository Access
 
 The project uses models hosted on Hugging Face. You may need to make sure the required model repositories are accessible from your environment.
@@ -289,27 +287,10 @@ Please review the applicable model licenses and terms before redistributing mode
 
 ---
 
-## Development
-
-Install the project dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the application locally:
-
-```bash
-python app.py
-```
-
-or use the appropriate entry point for the specific project version.
-
----
-
 ## License
 
 MIT License
+
 ```
 
 ---
