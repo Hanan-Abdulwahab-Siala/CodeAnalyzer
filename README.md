@@ -189,7 +189,7 @@ The Gradio interface can be used to:
 
 We have optional KCL CREATE scripts for running the project in an HPC/GPU environment without using Gradio interface
 
-## 1. Connect to KCL HPC
+#### 1. Connect to KCL HPC
 
 From your local computer, connect to the KCL HPC login node:
 
@@ -201,7 +201,7 @@ After connecting, you should see a shell prompt on the HPC login node.
 
 ---
 
-## 2. Go to the Project Directory
+#### 2. Go to the Project Directory
 
 Move into the Mamba Code Analyzer project:
 
