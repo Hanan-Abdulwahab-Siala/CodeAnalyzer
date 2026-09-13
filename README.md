@@ -349,7 +349,7 @@ Example:
 
 ```
 JOBID      PARTITION   NAME             USER       ST   TIME   NODES   NODELIST(REASON)
-37143242   gpu         run_kcl_gradio   k12345  R    00:05      1   erc-hpc-comp035
+37143242   gpu         mamba-gr   k12345  R    00:05      1   erc-hpc-comp035
 ```
 
 The important column is **ST**. Common states include:
@@ -533,7 +533,7 @@ cat input/sample.txt
 
 ---
 
-#### 4. Check SLURM script and Make the Script Executable
+#### 4. Check the SLURM script and make the Script Executable
 
 Run:
 
@@ -603,7 +603,7 @@ Example:
 
 ```
 JOBID      PARTITION   NAME             USER       ST   TIME   NODES   NODELIST(REASON)
-37143242   gpu         mamba-analyzer   k12345  R    00:05      1   erc-hpc-comp035
+37143242   gpu         mamba-   k12345  R    00:05      1   erc-hpc-comp035
 ```
 
 The important column is **ST**. Common states include:
