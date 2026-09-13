@@ -206,8 +206,15 @@ srun --partition=gpu \
      --cpus-per-task=4 \
      --mem=32G \
      --pty /bin/bash -l
+```
+Then:
 
+```bash
 nvidia-smi
+```
+Then:
+
+```bash
 module load cuda
 ```
 
