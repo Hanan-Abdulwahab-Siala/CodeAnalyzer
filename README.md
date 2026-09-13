@@ -1175,6 +1175,24 @@ This allows the Mamba Code Analyzer to run as a GPU-accelerated SLURM job on KCL
 
 ---
 
+Note
+You can modify the following line in:
+```bash
+python analyze.py input/sample.txt
+```
+with one of the following:
+```python
+(version 1 and LoRA Adapter)
+python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
+Or (version 2 and LoRA Adapter)
+python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
+Or (version 1 and Full Model)
+python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
+Or (version 2 and Full Model)
+python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
+```
+
+---
 If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
 
 ---
