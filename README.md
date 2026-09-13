@@ -322,9 +322,89 @@ ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.
 ---
 
 ### 2) Running from the Command-Line 
-mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-#### 3. Check the Python Virtual Environment
 
+Please follow these instructions:  
+
+#### 1. Connect to GPU provider
+
+From your local computer, connect to the remote server, for example:
+
+```bash
+ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
+```
+After connecting, you should see a shell prompt on the HPC login node.
+k12345@arc-hpc-login3:~$
+
+#### 2. Go to the Project Directory
+
+Move into the Mamba Code Analyzer project:
+
+```bash
+cd ~/Mamba-Code-Analyzer
+```
+
+Check that the project is there:
+
+```bash
+ls
+```
+
+You should see files such as:
+
+```
+analyze.py
+input/
+.venv/
+```
+
+You can also check your current directory:
+
+```bash
+pwd
+```
+---
+
+#### 3. Verify the Input File Exists
+
+Check the input file:
+
+```bash
+ls -lh input/sample.txt
+```
+
+You can also test:
+
+```bash
+cat input/sample.txt
+```
+
+---
+
+#### 4. Ask for GPU from GPU provider:
+For example, in KCL, we use:
+
+```bash
+srun --partition=gpu \
+     --gres=gpu:1 \
+     --time=04:00:00 \
+     --cpus-per-task=4 \
+     --mem=32G \
+     --pty /bin/bash -l
+```
+Then:
+
+```bash
+nvidia-smi
+```
+Then:
+
+```bash
+module load cuda
+```
+
+---
+
+#### 5. Check the Python Virtual Environment
 The project should contain a Python virtual environment:
 
 ```bash
@@ -357,31 +437,74 @@ It should point to something similar to:
 
 ---
 
-If the project includes a command-line entry point, run it using the project's entry script.
+#### 5. Run the program
 
-For example:
+Run the Gradio program:
 
 ```bash
-python analyze.py
+python app.py
 ```
 
-The application should display hardware information when it starts.
+You should receive something similar to:
 
-Example:
-
-```text
-============================================================
-MAMBA CODE ANALYZER - HARDWARE
-============================================================
-CUDA available : True
-Device         : cuda
-GPU            : NVIDIA ...
-PyTorch        : 2.x.x
-CUDA version   : 12.x
-Dtype          : torch.bfloat16
-============================================================
 ```
-mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
+============================================================
+Starting Mamba Code Analyzer
+Model loading is manual.
+Gradio server: http://0.0.0.0:7860
+Port: 7860
+============================================================
+* Running on local URL:  http://0.0.0.0:7860
+```
+---
+
+#### 6. Get HostName and Open Gradio
+To get the hostname, you can open another terminal/SSH window and connect to the HPC again; for example, in KCL we use:
+
+```bash
+ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
+```
+Then run:
+
+```bash
+hostname
+```
+You will get something like:
+```bash
+gpu-node-123
+```
+
+Then, create the tunnel by running:
+
+```bash
+ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
+```
+Replace gpu-node-123 with the hostname you got.
+
+Then open in a browser:
+```bash
+http://localhost:7861
+```
+
+**Important**
+Your first terminal must stay running:
+
+Terminal 1
+```bash
+$ python app.py
+```
+
+* Running on local URL: http://0.0.0.0:7860
+
+The second terminal handles the SSH tunnel:
+
+Terminal 2
+```bash
+ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
+```
+
+---
+
 ---
 
 ### 3) Running using KCL CREATE HPC Workflow with Gradio
