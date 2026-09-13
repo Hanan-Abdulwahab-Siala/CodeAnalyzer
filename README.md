@@ -128,7 +128,7 @@ pip install -r requirements.txt
 ---
 ## Running
 
-### 1) Running by the Command-Line 
+### 1) Running from the Command-Line 
 
 #### 3. Check the Python Virtual Environment
 
@@ -166,7 +166,7 @@ It should point to something similar to:
 
 
 
-If the project contains a command-line entry point, run it according to the project's entry script.
+If the project includes a command-line entry point, run it using the project's entry script.
 
 For example:
 
@@ -223,7 +223,7 @@ The Gradio interface can be used to:
 
 ### 3) Running using KCL CREATE HPC Workflow with Gradio
 
-We have an optional KCL CREATE script for running the project in an HPC/GPU environment using a Gradio interface.
+We provide an optional KCL CREATE script to run the project in an HPC/GPU environment using a Gradio interface.
 
 #### 1. Connect to KCL HPC
 
@@ -280,7 +280,7 @@ cat input/sample.txt
 
 ---
 
-#### 4. Check SLURM script and Make the Script Executable
+#### 4. Check the SLURM script and make the Script Executable
 
 Run:
 
@@ -412,6 +412,28 @@ To monitor it live:
 ```bash
 tail -f /scratch/users/$USER/mamba-gradio-37143242.out
 ```
+
+You should see information similar to:
+
+```bash
+Python 3.10.12
+
+PyTorch: 2.14.0+cu130
+CUDA available: True
+CUDA version: 13.0
+GPU: NVIDIA A100-SXM4-40GB
+
+Gradio configuration
+Host: 0.0.0.0
+Port: 7860
+
+Compute node:
+erc-hpc-comp035
+
+Starting Gradio...
+```
+
+The exact GPU may be different depending on what SLURM allocates.
 
 Press `Ctrl + C` to stop monitoring.
 
