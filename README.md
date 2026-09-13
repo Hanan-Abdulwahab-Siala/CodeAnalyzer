@@ -380,7 +380,7 @@ cat input/sample.txt
 
 ---
 
-#### 4. Ask for GPU from GPU provider:
+#### 4. Ask for a GPU from the GPU provider:
 For example, in KCL, we use:
 
 ```bash
@@ -439,72 +439,70 @@ It should point to something similar to:
 
 #### 5. Run the program
 
-Run the Gradio program:
+Run the analyze program:
 
 ```bash
-python app.py
+python analyze.py input/sample.txt
+or
+python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
+or
+python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
+or
+python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
+or
+python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
+
 ```
 
 You should receive something similar to:
 
 ```
+Starting analyzer...
+Model version: 2
+Model type: LoRA Adapter
+Input characters: 94
+Loading model...
+Loading model version 2 (LoRA Adapter)...
+Checkpoint: HA-Siala/Mamba-v0.2
+Dtype: torch.bfloat16
+Loading base Mistral model...
+Loading checkpoint shards: 100%|█████████████████████████████████████████████████████████| 3/3 [00:05<00:00,  1.94s/it]
+Loading LoRA adapter...
+Model loaded successfully.
+Model loaded successfully.
+Starting inference...
+Input tokens: 146
 ============================================================
-Starting Mamba Code Analyzer
-Model loading is manual.
-Gradio server: http://0.0.0.0:7860
-Port: 7860
+GENERATION DIAGNOSTICS
+Input tokens: 146
+Generated tokens: 327
+Maximum generated tokens: 32768
+Reached token limit: False
+Output characters: 1033
 ============================================================
-* Running on local URL:  http://0.0.0.0:7860
+
+Flaws:
+   - PF — Performance Fault: ...
+
+Refactored versions code:
+
+Option 1
+...
+
+========================================
+Inference Metrics
+========================================
+Model type:                 LoRA Adapter
+Model version:              2
+Input tokens:               146
+Generated tokens:           327
+Inference time:             16.442539s
+Time per input token:       0.112620s
+Time per generated token:   0.050283s
+========================================
+
+Output saved to: output/output.txt
 ```
----
-
-#### 6. Get HostName and Open Gradio
-To get the hostname, you can open another terminal/SSH window and connect to the HPC again; for example, in KCL we use:
-
-```bash
-ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
-```
-Then run:
-
-```bash
-hostname
-```
-You will get something like:
-```bash
-gpu-node-123
-```
-
-Then, create the tunnel by running:
-
-```bash
-ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
-```
-Replace gpu-node-123 with the hostname you got.
-
-Then open in a browser:
-```bash
-http://localhost:7861
-```
-
-**Important**
-Your first terminal must stay running:
-
-Terminal 1
-```bash
-$ python app.py
-```
-
-* Running on local URL: http://0.0.0.0:7860
-
-The second terminal handles the SSH tunnel:
-
-Terminal 2
-```bash
-ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
-```
-
----
-
 ---
 
 ### 3) Running using KCL CREATE HPC Workflow with Gradio
