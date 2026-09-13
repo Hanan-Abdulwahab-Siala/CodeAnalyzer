@@ -130,6 +130,42 @@ pip install -r requirements.txt
 
 ### 1) Running by the Command-Line 
 
+#### 3. Check the Python Virtual Environment
+
+The project should contain a Python virtual environment:
+
+```bash
+ls .venv
+```
+
+Activate it:
+
+```bash
+source .venv/bin/activate
+```
+
+Check Python:
+
+```bash
+python --version
+```
+
+Check where Python is coming from:
+
+```bash
+which python
+```
+
+It should point to something similar to:
+
+```
+.../Mamba-Code-Analyzer/.venv/bin/python
+```
+
+---
+
+
+
 If the project contains a command-line entry point, run it according to the project's entry script.
 
 For example:
@@ -185,9 +221,236 @@ The Gradio interface can be used to:
 
 ---
 
-### 3) Running by using KCL CREATE HPC Workflow without Gradio
+### 3) Running using KCL CREATE HPC Workflow with Gradio
 
-We have optional KCL CREATE scripts for running the project in an HPC/GPU environment without using Gradio interface
+We have an optional KCL CREATE script for running the project in an HPC/GPU environment using a Gradio interface.
+
+#### 1. Connect to KCL HPC
+
+From your local computer, connect to the KCL HPC login node:
+
+```bash
+ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
+```
+After connecting, you should see a shell prompt on the HPC login node.
+k12345@arc-hpc-login3:~$
+
+#### 2. Go to the Project Directory
+
+Move into the Mamba Code Analyzer project:
+
+```bash
+cd ~/Mamba-Code-Analyzer
+```
+
+Check that the project is there:
+
+```bash
+ls
+```
+
+You should see files such as:
+
+```
+analyze.py
+input/
+.venv/
+```
+
+You can also check your current directory:
+
+```bash
+pwd
+```
+---
+
+#### 3. Verify the Input File Exists
+
+Check the input file:
+
+```bash
+ls -lh input/sample.txt
+```
+
+You can also test:
+
+```bash
+cat input/sample.txt
+```
+
+---
+
+#### 4. Check SLURM script and Make the Script Executable
+
+Run:
+
+```bash
+cat KCL/run_kcl_gradio.sh
+```
+
+Then:
+
+```bash
+chmod +x KCL/run_kcl_gradio.sh
+```
+
+Check the file:
+
+```bash
+ls -l KCL/run_kcl_gradio.sh
+```
+
+You should see executable permissions, for example:
+
+```
+-rwxr-xr-x ... run_kcl_gradio.sh
+```
+
+---
+
+#### 5. Submit the SLURM Job
+
+Submit the script using:
+
+```bash
+sbatch KCL/run_kcl_gradio.sh
+```
+
+You should receive something similar to:
+
+```
+Submitted batch job 37143242
+```
+
+The number is the **JOBID**. For example:
+
+```
+JOBID=37143242
+```
+
+Your JOBID will be different each time you submit a new job.
+
+---
+#### 6. Check Whether the Job Is Running
+
+Use:
+
+```bash
+squeue -j 37143242
+```
+
+Or check all your jobs:
+
+```bash
+squeue -u $USER
+```
+
+Example:
+
+```
+JOBID      PARTITION   NAME             USER       ST   TIME   NODES   NODELIST(REASON)
+37143242   gpu         run_kcl_gradio   k12345  R    00:05      1   erc-hpc-comp035
+```
+
+The important column is **ST**. Common states include:
+
+| State | Meaning              |
+|-------|-----------------------|
+| R     | Running                |
+| PD    | Pending / waiting for resources |
+| CG    | Completing              |
+| CD    | Completed               |
+| F     | Failed                  |
+| CA    | Cancelled               |
+
+If you see `R`, the job is currently running.
+
+---
+
+#### 7. Monitor the Job Continuously
+
+You can monitor the job every 2 seconds:
+
+```bash
+watch -n 2 squeue -j 37143242
+```
+
+Press `Ctrl + C` to stop `watch`.
+
+If `watch` is not available, simply run:
+
+```bash
+squeue -j 37143242
+```
+
+again whenever you want to check the status.
+
+---
+
+#### 8. Monitor the Output File
+
+The SLURM script contains:
+
+```bash
+#SBATCH --output=/scratch/users/%u/mamba-%j.out
+```
+
+`%j` is automatically replaced with the job ID. For example, if the JOBID is `37143242`, the output file is:
+
+```
+/scratch/users/$USER/mamba-gradio-37143242.out
+```
+
+You can view it with:
+
+```bash
+cat /scratch/users/$USER/mamba-gradio-37143242.out
+```
+
+To monitor it live:
+
+```bash
+tail -f /scratch/users/$USER/mamba-gradio-37143242.out
+```
+
+Press `Ctrl + C` to stop monitoring.
+
+---
+
+#### 9. Monitor Errors
+
+The SLURM script contains:
+
+```bash
+#SBATCH --error=/scratch/users/%u/mamba-gradio-%j.err
+```
+
+For job `37143242`, the error file is:
+
+```
+/scratch/users/$USER/mamba-gradio-37143242.err
+```
+
+View it:
+
+```bash
+cat /scratch/users/$USER/mamba-gradio-37143242.err
+```
+
+Or monitor it live:
+
+```bash
+tail -f /scratch/users/$USER/mamba-gradio-37143242.err
+```
+
+If the file is empty, that is usually a good sign.
+
+---
+
+
+### 4) Running using KCL CREATE HPC Workflow without Gradio
+
+We have an optional KCL CREATE script for running the project in an HPC/GPU environment without using the Gradio interface.
 
 #### 1. Connect to KCL HPC
 
@@ -198,6 +461,7 @@ ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
 ```
 
 After connecting, you should see a shell prompt on the HPC login node.
+k12345@arc-hpc-login3:~$
 
 ---
 
@@ -231,41 +495,7 @@ pwd
 
 ---
 
-#### 3. Check the Python Virtual Environment
-
-The project should contain a Python virtual environment:
-
-```bash
-ls .venv
-```
-
-Activate it:
-
-```bash
-source .venv/bin/activate
-```
-
-Check Python:
-
-```bash
-python --version
-```
-
-Check where Python is coming from:
-
-```bash
-which python
-```
-
-It should point to something similar to:
-
-```
-.../Mamba-Code-Analyzer/.venv/bin/python
-```
-
----
-
-#### 4. Verify the Input File Exists
+#### 3. Verify the Input File Exists
 
 Check the input file:
 
@@ -278,11 +508,10 @@ You can also test:
 ```bash
 cat input/sample.txt
 ```
----
 
 ---
 
-#### 5. Check SLURM script and Make the Script Executable
+#### 4. Check SLURM script and Make the Script Executable
 
 Run:
 
@@ -310,7 +539,7 @@ You should see executable permissions, for example:
 
 ---
 
-#### 6. Submit the SLURM Job
+#### 5. Submit the SLURM Job
 
 Submit the script using:
 
@@ -334,7 +563,7 @@ Your JOBID will be different each time you submit a new job.
 
 ---
 
-#### 7. Check Whether the Job Is Running
+#### 6. Check Whether the Job Is Running
 
 Use:
 
@@ -352,7 +581,7 @@ Example:
 
 ```
 JOBID      PARTITION   NAME             USER       ST   TIME   NODES   NODELIST(REASON)
-37143242   gpu         mamba-analyzer   k20122072  R    00:05      1   erc-hpc-comp035
+37143242   gpu         mamba-analyzer   k12345  R    00:05      1   erc-hpc-comp035
 ```
 
 The important column is **ST**. Common states include:
@@ -370,7 +599,7 @@ If you see `R`, the job is currently running.
 
 ---
 
-#### 8. Monitor the Job Continuously
+#### 7. Monitor the Job Continuously
 
 You can monitor the job every 2 seconds:
 
@@ -390,7 +619,7 @@ again whenever you want to check the status.
 
 ---
 
-#### 9. Monitor the Output File
+#### 8. Monitor the Output File
 
 The SLURM script contains:
 
@@ -420,7 +649,7 @@ Press `Ctrl + C` to stop monitoring.
 
 ---
 
-#### 10. Monitor Errors
+#### 9. Monitor Errors
 
 The SLURM script contains:
 
@@ -450,7 +679,7 @@ If the file is empty, that is usually a good sign.
 
 ---
 
-#### 11. Check the Generated Results
+#### 10. Check the Generated Results
 
 Finally, if everything succeeds:
 
@@ -484,6 +713,8 @@ sacct -j 37143242
 ```
 
 This allows the Mamba Code Analyzer to run as a GPU-accelerated SLURM job on KCL HPC while giving you several ways to monitor its progress.
+
+---
 
 If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
 
