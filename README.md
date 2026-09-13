@@ -28,6 +28,7 @@ Mamba-Code-Analyzer/
 │
 ├── input/
 │   └── sample.txt
+│   └── sample.py
 │
 ├── output/
 │   └── output.txt
