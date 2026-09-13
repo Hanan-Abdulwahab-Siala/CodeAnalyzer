@@ -1351,4 +1351,4 @@ MIT License
 Student: hanan.siala@kcl.ac.uk
 Supervisor: kevin.lano@kcl.ac.uk
 
-Mamba Code Analyzer project.
+Code Analyzer project.
