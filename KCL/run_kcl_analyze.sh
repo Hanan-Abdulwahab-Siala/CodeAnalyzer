@@ -23,17 +23,44 @@ echo
 echo "Compute node:"
 hostname
 
+# --------------------------------------------------
+# Check GPU
+# --------------------------------------------------
+
 echo
-echo "GPU:"
-nvidia-smi
+echo "Checking GPU..."
+
+if ! nvidia-smi >/dev/null 2>&1; then
+    echo
+    echo "ERROR: No GPU is available on this node."
+    echo "The job will not continue."
+    echo
+    exit 1
+fi
+
+echo
+echo "GPU available:"
+nvidia-smi --query-gpu=name,memory.total --format=csv
+
+# --------------------------------------------------
+# Load CUDA
+# --------------------------------------------------
 
 echo
 echo "Loading CUDA..."
 module load cuda
 
+# --------------------------------------------------
+# Project
+# --------------------------------------------------
+
 cd "$HOME/Mamba-Code-Analyzer"
 
 source .venv/bin/activate
+
+# --------------------------------------------------
+# Python
+# --------------------------------------------------
 
 echo
 echo "Python:"
@@ -43,24 +70,42 @@ echo
 echo "Python executable:"
 which python
 
+# --------------------------------------------------
+# PyTorch / CUDA check
+# --------------------------------------------------
+
 echo
-echo "PyTorch:"
+echo "Checking PyTorch CUDA..."
+
 python -c "
 import torch
+
 print('PyTorch:', torch.__version__)
 print('CUDA available:', torch.cuda.is_available())
 print('CUDA version:', torch.version.cuda)
-if torch.cuda.is_available():
-    print('GPU:', torch.cuda.get_device_name(0))
-else:
-    raise RuntimeError('CUDA is not available')
+
+if not torch.cuda.is_available():
+    print()
+    print('ERROR: PyTorch cannot access the allocated GPU.')
+    print('The job will not continue.')
+    raise SystemExit(1)
+
+print('GPU:', torch.cuda.get_device_name(0))
 "
+
+# --------------------------------------------------
+# Run analyzer
+# --------------------------------------------------
 
 echo
 echo "Running inference..."
 python analyze.py input/sample.txt
 
+# --------------------------------------------------
+# Finished
+# --------------------------------------------------
+
 echo
 echo "========================================"
-echo "Job completed"
+echo "Job completed successfully"
 echo "========================================"
