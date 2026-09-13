@@ -273,21 +273,18 @@ Port: 7860
 * Running on local URL:  http://0.0.0.0:7860
 ```
 ---
-mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-#### 6. Get HostName and Open Gradio
 
+#### 6. Get HostName and Open Gradio
 To get the hostname, you can open another terminal/SSH window and connect to the HPC again; for example, in KCL we use:
 
 ```bash
 ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
 ```
-
 Then run:
 
 ```bash
 hostname
 ```
-
 You will get something like:
 ```bash
 gpu-node-123
@@ -296,9 +293,8 @@ gpu-node-123
 Then, create the tunnel by running:
 
 ```bash
-ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@hpc.create.kcl.ac.uk
+ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k20122072@arc-hpc-login4.create.kcl.ac.uk
 ```
-
 Replace gpu-node-123 with the hostname you got.
 
 Then open in a browser:
@@ -317,7 +313,7 @@ $ python app.py
 The second terminal handles the SSH tunnel:
 
 Terminal 2
-$ ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@hpc.create.kcl.ac.uk
+ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k20122072@arc-hpc-login4.create.kcl.ac.uk
 
 ---
 
