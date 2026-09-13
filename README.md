@@ -472,13 +472,16 @@ Then:
 ls -lh output/
 ```
 
+To view the output:
+```bash
+cat output/output.txt
+```
+
 Finally:
 
 ```bash
 sacct -j 37143242
 ```
-
----
 
 This allows the Mamba Code Analyzer to run as a GPU-accelerated SLURM job on KCL HPC while giving you several ways to monitor its progress.
 
