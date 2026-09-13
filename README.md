@@ -41,38 +41,6 @@ Code-Analyzer/
 
 ---
 
-## Supported Models
-
-The project supports both LoRA adapters and full model checkpoints.
-
-### Base Model
-
-The LoRA versions use:
-
-```
-mistralai/Mistral-7B-v0.3
-```
-
-### LoRA Adapter Models
-
-- **Version 1:** `HA-Siala/Mamba-v0.1`
-- **Version 2:** `HA-Siala/Mamba-v0.2`
-- **Version 1:** 'HA-Siala/Detect-Flaws-v0.1'
-- **Version 2:** 'HA-Siala/Detect-Flaws-v0.2'
-- **Version 1:** 'HA-Siala/RefactoringPy-v0.1'
-
-### Full Models
-
-- **Version 1:** `HA-Siala/Mamba-full-v0.1`
-- **Version 2:** `HA-Siala/Mamba-full-v0.2`
-- **Version 1:** 'HA-Siala/Detect-Flaws-full-v0.1'
-- **Version 2:** 'HA-Siala/Detect-Flaws-full-v0.2'
-- **Version 1:** 'HA-Siala/RefactoringPy-full-v0.1'
-
-The full-model workflow loads the complete checkpoint directly.
-
----
-
 ## Requirements
 
 Recommended:
@@ -1314,28 +1282,40 @@ Dtype: torch.bfloat16
 ```
 ---
 
-## Model and Repository Access
+## Supported Models
 
 The project uses models hosted on Hugging Face. You may need to make sure the required model repositories are accessible from your environment.
 
 Model identifiers used by the project include:
 
-- `mistralai/Mistral-7B-v0.3`
-  
+### Base Model
+
+```
+mistralai/Mistral-7B-v0.3
+```
+### LoRA Adapter Models
+
 **Mamba**  
-- `HA-Siala/Mamba-v0.1`
-- `HA-Siala/Mamba-v0.2`
-- `HA-Siala/Mamba-full-v0.1`
-- `HA-Siala/Mamba-full-v0.2`
+- **Version 1:** `HA-Siala/Mamba-v0.1`
+- **Version 2:** `HA-Siala/Mamba-v0.2`
   
 **Python**
-- `HA-Siala/Detect-Flaws-v0.1`
-- `HA-Siala/Detect-Flaws-v0.2`
-- `HA-Siala/RefactoringPy-v0.1`
-- `HA-Siala/Detect-Flaws-full-v0.1`
-- `HA-Siala/Detect-Flaws-full-v0.2`
-- `HA-Siala/RefactoringPy-full-v0.1`
-  
+- **Version 1:** 'HA-Siala/Detect-Flaws-v0.1'
+- **Version 2:** 'HA-Siala/Detect-Flaws-v0.2'
+- **Version 1:** 'HA-Siala/RefactoringPy-v0.1'
+
+### Full Models
+**Mamba**  
+- **Version 1:** `HA-Siala/Mamba-full-v0.1`
+- **Version 2:** `HA-Siala/Mamba-full-v0.2`
+
+**Python**
+- **Version 1:** 'HA-Siala/Detect-Flaws-full-v0.1'
+- **Version 2:** 'HA-Siala/Detect-Flaws-full-v0.2'
+- **Version 1:** 'HA-Siala/RefactoringPy-full-v0.1'
+
+The full-model workflow loads the complete checkpoint directly.
+
 Please review the applicable model licenses and terms before redistributing model files or using them commercially.
 
 ---
