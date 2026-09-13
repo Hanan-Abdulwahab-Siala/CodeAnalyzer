@@ -1,6 +1,6 @@
 # Mamba Code Analyzer
 
-A GPU-powered application for analyzing Mamba code using fine-tuned Mistral LLM.
+A GPU-powered application for analyzing Mamba code using a fine-tuned Mistral LLM.
 
 The project provides:
 
@@ -164,8 +164,6 @@ It should point to something similar to:
 
 ---
 
-
-
 If the project includes a command-line entry point, run it using the project's entry script.
 
 For example:
@@ -305,7 +303,6 @@ You should see executable permissions, for example:
 ```
 -rwxr-xr-x ... run_kcl_gradio.sh
 ```
-
 ---
 
 #### 5. Submit the SLURM Job
@@ -468,7 +465,150 @@ tail -f /scratch/users/$USER/mamba-gradio-37143242.err
 If the file is empty, that is usually a good sign.
 
 ---
+#### 10. Wait for Gradio to Start
 
+Keep monitoring:
+
+```bash
+tail -f /scratch/users/$USER/mamba-gradio-JOBID.out
+```
+
+The application may take some time to start if the Mamba model needs to be loaded.
+
+The important point is that your job should remain:
+
+```bash
+ST = R
+```
+
+in:
+
+```bash
+squeue -u $USER
+```
+
+---
+
+#### 11. Find the Compute Node
+
+The output will show something like:
+
+```bash
+Compute node:
+erc-hpc-comp035
+```
+
+The compute node can change every time the job runs.
+
+Therefore, **do not permanently hard-code the compute node** in your SSH command.
+
+For example, if the current node is:
+
+```bash
+erc-hpc-comp035
+```
+
+the tunnel will use that node.
+
+---
+
+#### 12. Create the SSH Tunnel
+
+The Gradio server is running on the HPC compute node on port:
+
+```bash
+7860
+```
+
+Your local computer needs an SSH tunnel to access it.
+
+##### On your local Windows computer
+
+Open **PowerShell** or **Command Prompt**.
+
+You should see a prompt similar to:
+
+```bash
+C:\Users\PC>
+```
+
+Run:
+
+```powershell
+ssh -m hmac-sha2-512 -L 7861:erc-hpc-comp035:7860 YOUR_KCL_USERNAME@hpc.create.kcl.ac.uk
+```
+
+Replace:
+
+```text
+erc-hpc-comp035
+```
+
+with the compute node assigned to your current SLURM job.
+
+Replace:
+
+```text
+YOUR_KCL_USERNAME
+```
+
+with your KCL HPC username.
+
+For example:
+
+```powershell
+ssh -m hmac-sha2-512 -L 7861:erc-hpc-comp035:7860 k20122072@hpc.create.kcl.ac.uk
+```
+
+Enter your KCL credentials if requested.
+
+##### Important
+
+Keep this SSH terminal **open** while using Gradio.
+
+The SSH connection provides the tunnel between your computer and the HPC compute node.
+
+---
+
+#### 13. Open Gradio in Your Browser
+
+Once the SSH tunnel is active, open Chrome, Edge, Firefox, or another browser.
+
+Go to:
+
+```text
+http://localhost:7861
+```
+
+The Gradio interface should appear.
+
+#### 14. Stopping the Application
+
+When you are finished, cancel the SLURM job:
+
+```bash
+scancel JOBID
+```
+
+For example:
+
+```bash
+scancel 37143242
+```
+
+You can confirm that it has stopped with:
+
+```bash
+squeue -u $USER
+```
+
+Also, close the SSH tunnel on your local computer with:
+
+```text
+Ctrl + C
+```
+
+---
 
 ### 4) Running using KCL CREATE HPC Workflow without Gradio
 
