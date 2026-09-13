@@ -1294,7 +1294,7 @@ Model identifiers used by the project include:
 mistralai/Mistral-7B-v0.3
 ```
 ### LoRA Adapter Models
-
+#### Mistral
 **Mamba**  
 - **Version 1:** `HA-Siala/Mamba-v0.1`
 - **Version 2:** `HA-Siala/Mamba-v0.2`
@@ -1303,8 +1303,10 @@ mistralai/Mistral-7B-v0.3
 - **Version 1:** 'HA-Siala/Detect-Flaws-v0.1'
 - **Version 2:** 'HA-Siala/Detect-Flaws-v0.2'
 - **Version 1:** 'HA-Siala/RefactoringPy-v0.1'
+#### DeepSeek
 
 ### Full Models
+#### Mistral
 **Mamba**  
 - **Version 1:** `HA-Siala/Mamba-full-v0.1`
 - **Version 2:** `HA-Siala/Mamba-full-v0.2`
@@ -1313,7 +1315,7 @@ mistralai/Mistral-7B-v0.3
 - **Version 1:** 'HA-Siala/Detect-Flaws-full-v0.1'
 - **Version 2:** 'HA-Siala/Detect-Flaws-full-v0.2'
 - **Version 1:** 'HA-Siala/RefactoringPy-full-v0.1'
-
+#### DeepSeek
 The full-model workflow loads the complete checkpoint directly.
 
 Please review the applicable model licenses and terms before redistributing model files or using them commercially.
