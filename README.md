@@ -17,7 +17,7 @@ The project provides:
 A typical project structure is:
 
 ```text
-Mamba-Code-Analyzer/
+Code-Analyzer/
 │
 ├── README.md
 ├── requirements.txt
