@@ -1321,6 +1321,7 @@ The project uses models hosted on Hugging Face. You may need to make sure the re
 Model identifiers used by the project include:
 
 - `mistralai/Mistral-7B-v0.3`
+  
 **Mamba**  
 - `HA-Siala/Mamba-v0.1`
 - `HA-Siala/Mamba-v0.2`
@@ -1328,12 +1329,12 @@ Model identifiers used by the project include:
 - `HA-Siala/Mamba-full-v0.2`
   
 **Python**
-- 'HA-Siala/Detect-Flaws-v0.1'
-- 'HA-Siala/Detect-Flaws-v0.2'
-- 'HA-Siala/RefactoringPy-v0.1'
-- 'HA-Siala/Detect-Flaws-full-v0.1'
-- 'HA-Siala/Detect-Flaws-full-v0.2'
-- 'HA-Siala/RefactoringPy-full-v0.1'
+- `HA-Siala/Detect-Flaws-v0.1`
+- `HA-Siala/Detect-Flaws-v0.2`
+- `HA-Siala/RefactoringPy-v0.1`
+- `HA-Siala/Detect-Flaws-full-v0.1`
+- `HA-Siala/Detect-Flaws-full-v0.2`
+- `HA-Siala/RefactoringPy-full-v0.1`
   
 Please review the applicable model licenses and terms before redistributing model files or using them commercially.
 
