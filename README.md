@@ -1,6 +1,6 @@
-# Mamba Code Analyzer
+# Code Analyzer
 
-A GPU-powered application for analyzing Mamba code using a fine-tuned Mistral LLM.
+A GPU-powered application for analyzing Mamba/Python code using a fine-tuned Mistral LLM.
 
 The project provides:
 
@@ -90,8 +90,8 @@ Recommended:
 Clone the repository:
 
 ```bash
-git clone https://github.com/HA-Siala/Mamba-Code-Analyzer.git
-cd Mamba-Code-Analyzer
+git clone https://github.com/HA-Siala/Code-Analyzer.git
+cd Code-Analyzer
 ```
 
 Create a virtual environment:
