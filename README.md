@@ -128,8 +128,431 @@ pip install -r requirements.txt
 ---
 ## Running
 
-### 1) Running from the Command-Line 
+### 1) Running by Gradio Web Interface
+The Gradio interface can be used to:
 
+- Select the model version
+- Select LoRA or full model
+- Enter Mamba code
+- Run the analyze
+- View detected flaws
+- View refactored versions
+- View inference information
+
+Please follow these instructions:  
+
+#### 1. Connect to GPU provider
+
+From your local computer, connect to the GPU provider, for example:
+
+```bash
+ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
+```
+After connecting, you should see a shell prompt on the HPC login node.
+k12345@arc-hpc-login3:~$
+
+#### 2. Go to the Project Directory
+
+Move into the Mamba Code Analyzer project:
+
+```bash
+cd ~/Mamba-Code-Analyzer
+```
+
+Check that the project is there:
+
+```bash
+ls
+```
+
+You should see files such as:
+
+```
+analyze.py
+input/
+.venv/
+```
+
+You can also check your current directory:
+
+```bash
+pwd
+```
+---
+
+#### 3. Verify the Input File Exists
+
+Check the input file:
+
+```bash
+ls -lh input/sample.txt
+```
+
+You can also test:
+
+```bash
+cat input/sample.txt
+```
+
+---
+
+#### 4. Check the Python Virtual Environment
+
+The project should contain a Python virtual environment:
+
+```bash
+ls .venv
+```
+
+Activate it:
+
+```bash
+source .venv/bin/activate
+```
+
+Check Python:
+
+```bash
+python --version
+```
+
+Check where Python is coming from:
+
+```bash
+which python
+```
+
+It should point to something similar to:
+
+```
+.../Mamba-Code-Analyzer/.venv/bin/python
+```
+
+---
+
+#### 5. Ask for GPU from GPU provider:
+For example, in KCL, we use:
+
+Run:
+
+```bash
+srun --partition=gpu --gres=gpu:1 --time=04:00:00 --cpus-per-task=4 --mem=32G --pty /bin/bash -l
+```
+
+---
+
+#### 5. Run the program
+
+Submit the script using:
+
+```bash
+python app.py
+```
+
+You should receive something similar to:
+
+```
+Submitted batch job 37143242
+```
+
+The number is the **JOBID**. For example:
+
+```
+JOBID=37143242
+```
+
+Your JOBID will be different each time you submit a new job.
+
+---
+#### 6. Check Whether the Job Is Running
+
+Use:
+
+```bash
+squeue -j 37143242
+```
+
+Or check all your jobs:
+
+```bash
+squeue -u $USER
+```
+
+Example:
+
+```
+JOBID      PARTITION   NAME             USER       ST   TIME   NODES   NODELIST(REASON)
+37143242   gpu         mamba-gr   k12345  R    00:05      1   erc-hpc-comp035
+```
+
+The important column is **ST**. Common states include:
+
+| State | Meaning              |
+|-------|-----------------------|
+| R     | Running                |
+| PD    | Pending / waiting for resources |
+| CG    | Completing              |
+| CD    | Completed               |
+| F     | Failed                  |
+| CA    | Cancelled               |
+
+If you see `R`, the job is currently running.
+
+---
+
+#### 7. Monitor the Job Continuously
+
+You can monitor the job every 2 seconds:
+
+```bash
+watch -n 2 squeue -j 37143242
+```
+
+Press `Ctrl + C` to stop `watch`.
+
+If `watch` is not available, simply run:
+
+```bash
+squeue -j 37143242
+```
+
+again whenever you want to check the status.
+
+---
+
+#### 8. Monitor the Output File
+
+The SLURM script contains:
+
+```bash
+#SBATCH --output=/scratch/users/%u/mamba-%j.out
+```
+
+`%j` is automatically replaced with the job ID. For example, if the JOBID is `37143242`, the output file is:
+
+```
+/scratch/users/$USER/mamba-gradio-37143242.out
+```
+
+You can view it with:
+
+```bash
+cat /scratch/users/$USER/mamba-gradio-37143242.out
+```
+
+To monitor it live:
+
+```bash
+tail -f /scratch/users/$USER/mamba-gradio-37143242.out
+```
+
+You should see information similar to:
+
+```bash
+Python 3.10.12
+
+PyTorch: 2.14.0+cu130
+CUDA available: True
+CUDA version: 13.0
+GPU: NVIDIA A100-SXM4-40GB
+
+Gradio configuration
+Host: 0.0.0.0
+Port: 7860
+
+Compute node:
+erc-hpc-comp035
+
+Starting Gradio...
+```
+
+The exact GPU may be different depending on what SLURM allocates.
+
+Press `Ctrl + C` to stop monitoring.
+
+---
+
+#### 9. Monitor Errors
+
+The SLURM script contains:
+
+```bash
+#SBATCH --error=/scratch/users/%u/mamba-gradio-%j.err
+```
+
+For job `37143242`, the error file is:
+
+```
+/scratch/users/$USER/mamba-gradio-37143242.err
+```
+
+View it:
+
+```bash
+cat /scratch/users/$USER/mamba-gradio-37143242.err
+```
+
+Or monitor it live:
+
+```bash
+tail -f /scratch/users/$USER/mamba-gradio-37143242.err
+```
+
+If the file is empty, that is usually a good sign.
+
+---
+#### 10. Wait for Gradio to Start
+
+Keep monitoring:
+
+```bash
+tail -f /scratch/users/$USER/mamba-gradio-JOBID.out
+```
+
+The application may take some time to start if the Mamba model needs to be loaded.
+
+The important point is that your job should remain:
+
+```bash
+ST = R
+```
+
+in:
+
+```bash
+squeue -u $USER
+```
+
+---
+
+#### 11. Find the Compute Node
+
+The output will show something like:
+
+```bash
+Compute node:
+erc-hpc-comp035
+```
+
+The compute node can change every time the job runs.
+
+Therefore, **do not permanently hard-code the compute node** in your SSH command.
+
+For example, if the current node is:
+
+```bash
+erc-hpc-comp035
+```
+
+the tunnel will use that node.
+
+---
+
+#### 12. Create the SSH Tunnel
+
+The Gradio server is running on the HPC compute node on port:
+
+```bash
+7860
+```
+
+Your local computer needs an SSH tunnel to access it.
+
+##### On your local Windows computer
+
+Open **PowerShell** or **Command Prompt**.
+
+You should see a prompt similar to:
+
+```bash
+C:\Users\PC>
+```
+
+Run:
+
+```powershell
+ssh -m hmac-sha2-512 -L 7861:erc-hpc-comp035:7860 YOUR_KCL_USERNAME@hpc.create.kcl.ac.uk
+```
+
+Replace:
+
+```text
+erc-hpc-comp035
+```
+
+with the compute node assigned to your current SLURM job.
+
+Replace:
+
+```text
+YOUR_KCL_USERNAME
+```
+
+with your KCL HPC username.
+
+For example:
+
+```powershell
+ssh -m hmac-sha2-512 -L 7861:erc-hpc-comp035:7860 k20122072@hpc.create.kcl.ac.uk
+```
+
+Enter your KCL credentials if requested.
+
+##### Important
+
+Keep this SSH terminal **open** while using Gradio.
+
+The SSH connection provides the tunnel between your computer and the HPC compute node.
+
+---
+
+#### 13. Open Gradio in Your Browser
+
+Once the SSH tunnel is active, open Chrome, Edge, Firefox, or another browser.
+
+Go to:
+
+```text
+http://localhost:7861
+```
+
+The Gradio interface should appear.
+
+#### 14. Stopping the Application
+
+When you are finished, cancel the SLURM job:
+
+```bash
+scancel JOBID
+```
+
+For example:
+
+```bash
+scancel 37143242
+```
+
+You can confirm that it has stopped with:
+
+```bash
+squeue -u $USER
+```
+
+Also, close the SSH tunnel on your local computer with:
+
+```text
+Ctrl + C
+```
+
+---
+
+
+mmmmmmmmmmmmmmmmmmmm
+mmmmmmmmmmmmmmmmmmmmmmmmmmmm
+---
+
+### 2) Running from the Command-Line 
+mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 #### 3. Check the Python Virtual Environment
 
 The project should contain a Python virtual environment:
@@ -188,35 +611,7 @@ CUDA version   : 12.x
 Dtype          : torch.bfloat16
 ============================================================
 ```
-
----
-
-### 2) Running by Gradio Web Interface
-
-If the project includes a Gradio interface, start the application using:
-
-```bash
-python app.py
-```
-
-The terminal will provide a local URL, usually similar to:
-
-```
-http://127.0.0.1:7860
-```
-
-Open that address in a web browser.
-
-The Gradio interface can be used to:
-
-- Select the model version
-- Select LoRA or full model
-- Enter Mamba/Python code
-- Run the analyze
-- View detected flaws
-- View refactored versions
-- View inference information
-
+mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 ---
 
 ### 3) Running using KCL CREATE HPC Workflow with Gradio
