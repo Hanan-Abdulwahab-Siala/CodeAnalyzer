@@ -293,7 +293,7 @@ gpu-node-123
 Then, create the tunnel by running:
 
 ```bash
-ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k20122072@arc-hpc-login4.create.kcl.ac.uk
+ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
 ```
 Replace gpu-node-123 with the hostname you got.
 
@@ -316,7 +316,7 @@ The second terminal handles the SSH tunnel:
 
 Terminal 2
 ```bash
-ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k20122072@arc-hpc-login4.create.kcl.ac.uk
+ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
 ```
 
 ---
