@@ -57,11 +57,17 @@ mistralai/Mistral-7B-v0.3
 
 - **Version 1:** `HA-Siala/Mamba-v0.1`
 - **Version 2:** `HA-Siala/Mamba-v0.2`
+- **Version 1:** 'HA-Siala/Detect-Flaws-v0.1'
+- **Version 2:** 'HA-Siala/Detect-Flaws-v0.2'
+- **Version 1:** 'HA-Siala/RefactoringPy-v0.1'
 
 ### Full Models
 
 - **Version 1:** `HA-Siala/Mamba-full-v0.1`
 - **Version 2:** `HA-Siala/Mamba-full-v0.2`
+- **Version 1:** 'HA-Siala/Detect-Flaws-full-v0.1'
+- **Version 2:** 'HA-Siala/Detect-Flaws-full-v0.2'
+- **Version 1:** 'HA-Siala/RefactoringPy-full-v0.1'
 
 The full-model workflow loads the complete checkpoint directly.
 
@@ -154,10 +160,10 @@ k12345@arc-hpc-login3:~$
 
 #### 2. Go to the Project Directory
 
-Move into the Mamba Code Analyzer project:
+Move into the Code Analyzer project:
 
 ```bash
-cd ~/Mamba-Code-Analyzer
+cd ~/Code-Analyzer
 ```
 
 Check that the project is there:
@@ -249,7 +255,7 @@ which python
 It should point to something similar to:
 
 ```
-.../Mamba-Code-Analyzer/.venv/bin/python
+.../Code-Analyzer/.venv/bin/python
 ```
 
 ---
@@ -259,14 +265,14 @@ It should point to something similar to:
 Run the Gradio program:
 
 ```bash
-python app.py
+python analyze.py
 ```
 
 You should receive something similar to:
 
 ```
 ============================================================
-Starting Mamba Code Analyzer
+Starting Code Analyzer
 Model loading is manual.
 Gradio server: http://0.0.0.0:7860
 Port: 7860
@@ -338,10 +344,10 @@ k12345@arc-hpc-login3:~$
 
 #### 2. Go to the Project Directory
 
-Move into the Mamba Code Analyzer project:
+Move into the Code Analyzer project:
 
 ```bash
-cd ~/Mamba-Code-Analyzer
+cd ~/Code-Analyzer
 ```
 
 Check that the project is there:
@@ -371,12 +377,16 @@ Check the input file:
 
 ```bash
 ls -lh input/sample.txt
+or
+ls -lh input/sample.py
 ```
 
 You can also test:
 
 ```bash
 cat input/sample.txt
+or
+cat input/sample.py
 ```
 
 ---
@@ -433,7 +443,7 @@ which python
 It should point to something similar to:
 
 ```
-.../Mamba-Code-Analyzer/.venv/bin/python
+.../Code-Analyzer/.venv/bin/python
 ```
 
 ---
@@ -444,26 +454,36 @@ Run the analyze program using one of the following:
 Default values
 ```bash
 python analyze.py input/sample.txt
+or
+python analyze.py input/sample.py
 ```
 
 Or (version 1 and LoRA Adapter)
 ```bash
 python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
+or
+python analyze.py input/sample.py --model-version 1 --model-type "LoRA Adapter"
 ```
 
 Or (version 2 and LoRA Adapter)
 ```bash
 python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
+or
+python analyze.py input/sample.py --model-version 2 --model-type "LoRA Adapter"
 ```
 
 Or (version 1 and Full Model)
 ```bash
 python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
+or
+python analyze.py input/sample.py --model-version 1 --model-type "Full Model"
 ```
 
 Or (version 2 and Full Model)
 ```bash
 python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
+or
+python analyze.py input/sample.py --model-version 2 --model-type "Full Model"
 ```
 
 You should receive something similar to:
@@ -480,7 +500,6 @@ Dtype: torch.bfloat16
 Loading base Mistral model...
 Loading checkpoint shards: 100%|█████████████████████████████████████████████████████████| 3/3 [00:05<00:00,  1.94s/it]
 Loading LoRA adapter...
-Model loaded successfully.
 Model loaded successfully.
 Starting inference...
 Input tokens: 146
@@ -533,10 +552,10 @@ k12345@arc-hpc-login3:~$
 
 #### 2. Go to the Project Directory
 
-Move into the Mamba Code Analyzer project:
+Move into the Code Analyzer project:
 
 ```bash
-cd ~/Mamba-Code-Analyzer
+cd ~/Code-Analyzer
 ```
 
 Check that the project is there:
@@ -566,12 +585,16 @@ Check the input file:
 
 ```bash
 ls -lh input/sample.txt
+or
+ls -lh input/sample.py
 ```
 
 You can also test:
 
 ```bash
 cat input/sample.txt
+or
+cat input/sample.py
 ```
 
 ---
@@ -927,10 +950,10 @@ k12345@arc-hpc-login3:~$
 
 #### 2. Go to the Project Directory
 
-Move into the Mamba Code Analyzer project:
+Move into the Code Analyzer project:
 
 ```bash
-cd ~/Mamba-Code-Analyzer
+cd ~/Code-Analyzer
 ```
 
 Check that the project is there:
@@ -961,12 +984,16 @@ Check the input file:
 
 ```bash
 ls -lh input/sample.txt
+or
+ls -lh input/sample.py
 ```
 
 You can also test:
 
 ```bash
 cat input/sample.txt
+or
+cat input/sample.py
 ```
 
 ---
@@ -1152,7 +1179,7 @@ Job completed
 Check the project directory:
 
 ```bash
-cd ~/Mamba-Code-Analyzer
+cd ~/Code-Analyzer
 ```
 
 Then:
@@ -1172,7 +1199,7 @@ Finally:
 sacct -j 37143242
 ```
 
-This allows the Mamba Code Analyzer to run as a GPU-accelerated SLURM job on KCL HPC while giving you several ways to monitor its progress.
+This allows the Mamba/Python Code Analyzer to run as a GPU-accelerated SLURM job on KCL HPC while giving you several ways to monitor its progress.
 
 ---
 
@@ -1180,20 +1207,30 @@ This allows the Mamba Code Analyzer to run as a GPU-accelerated SLURM job on KCL
 You can modify the following line in KCL/run_kcl_analyze.sh file:
 ```python
 python analyze.py input/sample.txt
+or
+python analyze.py input/sample.py
 ```
 with one of the following:
 ```python
 (version 1 and LoRA Adapter)
 python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
+or
+python analyze.py input/sample.py --model-version 1 --model-type "LoRA Adapter"
 
 (version 2 and LoRA Adapter)
 python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
+or
+python analyze.py input/sample.py --model-version 2 --model-type "LoRA Adapter"
 
 (version 1 and Full Model)
 python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
+or
+python analyze.py input/sample.py --model-version 1 --model-type "Full Model"
 
 (version 2 and Full Model)
 python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
+or
+python analyze.py input/sample.py --model-version 2 --model-type "Full Model"
 ```
 
 ---
@@ -1284,11 +1321,20 @@ The project uses models hosted on Hugging Face. You may need to make sure the re
 Model identifiers used by the project include:
 
 - `mistralai/Mistral-7B-v0.3`
+**Mamba**  
 - `HA-Siala/Mamba-v0.1`
 - `HA-Siala/Mamba-v0.2`
 - `HA-Siala/Mamba-full-v0.1`
 - `HA-Siala/Mamba-full-v0.2`
-
+  
+**Python**
+- 'HA-Siala/Detect-Flaws-v0.1'
+- 'HA-Siala/Detect-Flaws-v0.2'
+- 'HA-Siala/RefactoringPy-v0.1'
+- 'HA-Siala/Detect-Flaws-full-v0.1'
+- 'HA-Siala/Detect-Flaws-full-v0.2'
+- 'HA-Siala/RefactoringPy-full-v0.1'
+  
 Please review the applicable model licenses and terms before redistributing model files or using them commercially.
 
 ---
