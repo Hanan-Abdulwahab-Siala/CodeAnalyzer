@@ -439,24 +439,35 @@ It should point to something similar to:
 
 #### 5. Run the program
 
-Run the analyze program:
-
+Run the analyze program using one of the following:
+Default values
 ```bash
 python analyze.py input/sample.txt
-or
-python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
-or
-python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
-or
-python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
-or
-python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
+```
 
+Or (version 1 and LoRA Adapter)
+```bash
+python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
+```
+
+Or (version 2 and LoRA Adapter)
+```bash
+python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
+```
+
+Or (version 1 and Full Model)
+```bash
+python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
+```
+
+Or (version 2 and Full Model)
+```bash
+python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
 ```
 
 You should receive something similar to:
 
-```
+```bash
 Starting analyzer...
 Model version: 2
 Model type: LoRA Adapter
