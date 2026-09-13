@@ -325,7 +325,7 @@ ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.
 
 Please follow these instructions:  
 
-#### 1. Connect to GPU provider
+#### 1. Connect to the GPU provider
 
 From your local computer, connect to the remote server, for example:
 
