@@ -1295,7 +1295,7 @@ mistralai/Mistral-7B-v0.3
 ```
 ### LoRA Adapter Models
 #### Mistral
-**Mamba**  
+`**Mamba**`  
 - **Version 1:** `HA-Siala/Mamba-v0.1`
 - **Version 2:** `HA-Siala/Mamba-v0.2`
   
