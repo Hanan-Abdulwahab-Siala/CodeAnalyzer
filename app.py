@@ -1,5 +1,4 @@
 import os
-import uuid
 
 import gradio as gr
 
@@ -52,6 +51,7 @@ def load_file_into_textbox(
 ):
 
     if uploaded_file is None:
+
         return ""
 
     try:
@@ -164,6 +164,20 @@ def task_changed(
     return gr.update(
         choices=["1", "2"],
         value="2",
+    )
+
+
+# ============================================================================
+# Clear input/output when Load Model is pressed
+# ============================================================================
+
+def clear_for_model_load():
+
+    return (
+        None,     # uploaded file
+        "",       # code
+        "",       # result
+        None,     # output file
     )
 
 
@@ -466,11 +480,9 @@ def analyze_code(
             exist_ok=True,
         )
 
-        unique_id = uuid.uuid4().hex
-
         output_file_path = os.path.join(
             OUTPUT_DIRECTORY,
-            f"output_{unique_id}.txt",
+            "output.txt",
         )
 
         with open(
@@ -696,7 +708,22 @@ model is explicitly loaded.
         outputs=model_version,
     )
 
+    # ------------------------------------------------------------------------
+    # Load Model
+    #
+    # First clear the previous input/output, then load the selected model.
+    # ------------------------------------------------------------------------
+
     load_model_button.click(
+        fn=clear_for_model_load,
+        inputs=[],
+        outputs=[
+            uploaded_file,
+            code_input,
+            result_output,
+            output_file,
+        ],
+    ).then(
         fn=load_selected_model,
         inputs=[
             language,
@@ -706,6 +733,10 @@ model is explicitly loaded.
         ],
         outputs=model_status,
     )
+
+    # ------------------------------------------------------------------------
+    # Analyze
+    # ------------------------------------------------------------------------
 
     analyze_button.click(
         fn=analyze_code,
@@ -719,6 +750,10 @@ model is explicitly loaded.
             output_file,
         ],
     )
+
+    # ------------------------------------------------------------------------
+    # Clear
+    # ------------------------------------------------------------------------
 
     clear_button.click(
         fn=clear_program,
