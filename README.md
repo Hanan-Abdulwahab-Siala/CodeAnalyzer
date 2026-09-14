@@ -155,6 +155,13 @@ pwd
 ```
 ---
 
+Execute the following and keep them to use them later:
+
+```bash
+echo "JOB ID: $SLURM_JOB_ID"
+echo "NODE: $HOSTNAME"
+```
+
 #### 3. Verify the Input File Exists
 
 Check the input file:
@@ -192,7 +199,6 @@ Then:
 ```bash
 module load cuda
 ```
-
 ---
 
 #### 5. Check the Python Virtual Environment
@@ -252,47 +258,30 @@ Port: 7860
 ---
 
 #### 6. Get HostName and Open Gradio
-To get the hostname, you can open another terminal/SSH window and connect to the HPC again; for example, in KCL we use:
+Now go to your Windows PC and open a second CMD window.
 
 ```bash
-ssh -m hmac-sha2-512 -N -L 7860:erc-hpc-vm046:7860 k12345@hpc.create.kcl.ac.uk
+$node = ssh -m hmac-sha2-512 k20122072@hpc.create.kcl.ac.uk "squeue -u k20122072 -h -t RUNNING -o %N | head -1"
+$node = $node.Trim()
+Write-Host "Compute node: $node"
+ssh -m hmac-sha2-512 -N -L 7860:${node}:7860 k20122072@hpc.create.kcl.ac.uk
 ```
 
-Then open in a browser:
+Keep this window open.
+
+**Important**: If you have multiple GPU/SLURM jobs running simultaneously, we should use your specific $SLURM_JOB_ID rather than -u k12345, otherwise the automatic command could select the wrong node. 
+
+Step 8 — Windows: open the browser
+
+Open your browser and enter:
+
 ```bash
 http://localhost:7860
 ```
-
-**Important**
-Your first terminal must stay running:
-
-Terminal 1
-```bash
-$ python app.py
-```
-
-* Running on local URL: http://0.0.0.0:7860
-
-The second terminal handles the SSH tunnel:
-
-Terminal 2
-```bash
-ssh -m hmac-sha2-512 -N -L 7860:erc-hpc-vm046:7860 k20122072@hpc.create.kcl.ac.uk
-```
+Your Gradio application should open.
 
 ---
 
-Note:
-
-If your next app runs on the same compute node and uses port 7860, you can reuse essentially the same command.
-If the app uses a different port, change both relevant ports. For example, if Gradio runs on 7861:
-```bash
-ssh -m hmac-sha2-512 -N -L 7861:erc-hpc-vm046:7861 k20122072@hpc.create.kcl.ac.uk
-```
-If Slurm gives you a different compute node, replace erc-hpc-vm046 with that node's hostname. So the reusable pattern is:
-```bash
-ssh -m hmac-sha2-512 -N -L LOCAL_PORT:COMPUTE_NODE:APP_PORT k20122072@hpc.create.kcl.ac.uk
-```
 ### 2) Running from the Command-Line 
 
 Please follow these instructions:  
