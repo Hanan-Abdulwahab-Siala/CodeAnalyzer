@@ -233,19 +233,21 @@ It should point to something similar to:
 Run the Gradio program:
 
 ```bash
-python analyze.py
+python app.py
 ```
 
 You should receive something similar to:
 
 ```
+(.venv) k20122072@erc-hpc-vm046:~/Code-Analyzer$ python app.py
 ============================================================
-Starting Code Analyzer
+Starting Unified Code Analyzer
 Model loading is manual.
 Gradio server: http://0.0.0.0:7860
 Port: 7860
 ============================================================
 * Running on local URL:  http://0.0.0.0:7860
+* To create a public link, set `share=True` in `launch()`.
 ```
 ---
 
@@ -253,28 +255,12 @@ Port: 7860
 To get the hostname, you can open another terminal/SSH window and connect to the HPC again; for example, in KCL we use:
 
 ```bash
-ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
+ssh -m hmac-sha2-512 -N -L 7860:erc-hpc-vm046:7860 k20122072@hpc.create.kcl.ac.uk
 ```
-Then run:
-
-```bash
-hostname
-```
-You will get something like:
-```bash
-gpu-node-123
-```
-
-Then, create the tunnel by running:
-
-```bash
-ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
-```
-Replace gpu-node-123 with the hostname you got.
 
 Then open in a browser:
 ```bash
-http://localhost:7861
+http://localhost:7860
 ```
 
 **Important**
@@ -291,7 +277,7 @@ The second terminal handles the SSH tunnel:
 
 Terminal 2
 ```bash
-ssh -m hmac-sha2-512 -L 7861:gpu-node-123:7860 k12345@arc-hpc-login4.create.kcl.ac.uk
+ssh -m hmac-sha2-512 -N -L 7860:erc-hpc-vm046:7860 k20122072@hpc.create.kcl.ac.uk
 ```
 
 ---
