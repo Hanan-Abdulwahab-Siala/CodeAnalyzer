@@ -155,13 +155,6 @@ pwd
 ```
 ---
 
-Execute the following and keep them to use them later:
-
-```bash
-echo "JOB ID: $SLURM_JOB_ID"
-echo "NODE: $HOSTNAME"
-```
-
 #### 3. Verify the Input File Exists
 
 Check the input file:
