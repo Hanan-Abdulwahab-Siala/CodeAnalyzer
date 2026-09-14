@@ -182,7 +182,11 @@ srun --partition=gpu \
      --mem=32G \
      --pty /bin/bash -l
 ```
-Then:
+Then you will see:
+```bash
+srun: job 37241627 has been allocated resources
+```
+This number is important when we open the Gradio interface. Please keep it.
 
 ```bash
 nvidia-smi
@@ -251,18 +255,24 @@ Port: 7860
 ---
 
 #### 6. Get HostName and Open Gradio
-Now go to your Windows PC and open a second CMD window.
+Now go to your Windows PC and open a second CMD window. Now we want to check GPU jobs by using the following command:
 
 ```bash
-$node = ssh -m hmac-sha2-512 k20122072@hpc.create.kcl.ac.uk "squeue -u k20122072 -h -t RUNNING -o %N | head -1"
-$node = $node.Trim()
-Write-Host "Compute node: $node"
-ssh -m hmac-sha2-512 -N -L 7860:${node}:7860 k20122072@hpc.create.kcl.ac.uk
+ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -u k12345 -h -t RUNNING -o %%N"
 ```
+We got, for example:
+37241627 → erc-hpc-comp036
+37241508 → erc-hpc-comp035
 
-Keep this window open.
+If your Gradio is running in job 37241627, do:
+```bash
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241627 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
+```
+If Gradio is running in job 37241508, do:
 
-**Important**: If you have multiple GPU/SLURM jobs running simultaneously, we should use your specific $SLURM_JOB_ID rather than -u k12345, otherwise the automatic command could select the wrong node. 
+```bash
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241508 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
+```
 
 Step 8 — Windows: open the browser
 
