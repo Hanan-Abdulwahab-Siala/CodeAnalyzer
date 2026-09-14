@@ -532,6 +532,16 @@ python analyze.py \
 ```
 Uses: HA-Siala/RefactoringPy-full-v0.1
 
+mmmmmmmmmmmmmmmmmmmmmm
+python analyze.py \
+    input/sample.txt \
+    --model "DeepSeek" \
+    --language Mamba \
+    --model-version 1 \
+    --model-type "LoRA Adapter" \
+    --output output/output.txt
+
+
 You should receive something similar to:
 
 ```bash
