@@ -255,7 +255,7 @@ Port: 7860
 To get the hostname, you can open another terminal/SSH window and connect to the HPC again; for example, in KCL we use:
 
 ```bash
-ssh -m hmac-sha2-512 -N -L 7860:erc-hpc-vm046:7860 k20122072@hpc.create.kcl.ac.uk
+ssh -m hmac-sha2-512 -N -L 7860:erc-hpc-vm046:7860 k12345@hpc.create.kcl.ac.uk
 ```
 
 Then open in a browser:
@@ -416,40 +416,129 @@ It should point to something similar to:
 #### 5. Run the program
 
 Run the analyze program using one of the following:
-Default values
-```bash
-python analyze.py input/sample.txt
-or
-python analyze.py input/sample.py
-```
 
-Or (version 1 and LoRA Adapter)
-```bash
-python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
-or
-python analyze.py input/sample.py --model-version 1 --model-type "LoRA Adapter"
-```
+Mamba — combined Flaws + Refactoring
 
-Or (version 2 and LoRA Adapter)
+There is no task argument:
 ```bash
-python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
-or
-python analyze.py input/sample.py --model-version 2 --model-type "LoRA Adapter"
+python analyze.py \
+    input/sample.txt \
+    --language Mamba \
+    --model-version 2 \
+    --model-type "LoRA Adapter" \
+    --output output/output.txt
 ```
+This uses: HA-Siala/Mamba-v0.2
 
-Or (version 1 and Full Model)
-```bash
-python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
 or
-python analyze.py input/sample.py --model-version 1 --model-type "Full Model"
-```
 
-Or (version 2 and Full Model)
 ```bash
-python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
-or
-python analyze.py input/sample.py --model-version 2 --model-type "Full Model"
+python analyze.py \
+    input/sample.txt \
+    --language Mamba \
+    --model-version 1 \
+    --model-type "LoRA Adapter" \
+    --output output/output.txt
 ```
+This uses: HA-Siala/Mamba-v0.1
+
+Mamba — combined Flaws + Refactoring v2 Full
+
+```bash
+python analyze.py \
+    input/sample.txt \
+    --language Mamba \
+    --model-version 2 \
+    --model-type "Full Model" \
+    --output output/output.txt
+```
+This uses: Mamba-full-v0.2
+
+or
+
+```bash
+python analyze.py \
+    input/sample.txt \
+    --language Mamba \
+    --model-version 1 \
+    --model-type "Full Model" \
+    --output output/output.txt
+```
+This uses: HA-Siala/Mamba-full-v0.1
+
+And the same Mamba inference mechanism for Python.
+
+Python — Flaw Detection v2 LoRA
+```bash
+python analyze.py \
+    input/sample.py \
+    --language Python \
+    --task "Flaw Detection" \
+    --model-version 2 \
+    --model-type "LoRA Adapter" \
+    --output output/output.txt
+```
+Uses: HA-Siala/Detect-Flaws-v0.2
+
+or 
+
+```bash
+python analyze.py \
+    input/sample.py \
+    --language Python \
+    --task "Flaw Detection" \
+    --model-version 1 \
+    --model-type "LoRA Adapter" \
+    --output output/output.txt
+```
+Uses: HA-Siala/Detect-Flaws-v0.1
+
+Python — Flaw Detection v2 Full
+```bash
+python analyze.py \
+    input/sample.py \
+    --language Python \
+    --task "Flaw Detection" \
+    --model-version 2 \
+    --model-type "Full Model" \
+    --output output/output.txt
+```
+Uses: HA-Siala/Detect-Flaws-full-v0.2
+
+Python — Flaw Detection v1 Full
+```bash
+python analyze.py \
+    input/sample.py \
+    --language Python \
+    --task "Flaw Detection" \
+    --model-version 1 \
+    --model-type "Full Model" \
+    --output output/output.txt
+```
+Uses: HA-Siala/Detect-Flaws-full-v0.1
+
+Python — Refactoring LoRA
+You do not need to specify version 1 because the program automatically forces it:
+```bash
+python analyze.py \
+    input/sample.py \
+    --language Python \
+    --task "Refactoring" \
+    --model-type "LoRA Adapter" \
+    --output output/output.txt
+```
+Uses: HA-Siala/RefactoringPy-v0.1
+
+Python — Refactoring Full Model
+```bash
+python analyze.py \
+    input/sample.py \
+    --language Python \
+    --task "Refactoring" \
+    --model-type "Full Model" \
+    --output output/output.txt
+```
+Uses: HA-Siala/RefactoringPy-full-v0.1
 
 You should receive something similar to:
 
