@@ -282,6 +282,17 @@ ssh -m hmac-sha2-512 -N -L 7860:erc-hpc-vm046:7860 k20122072@hpc.create.kcl.ac.u
 
 ---
 
+Note:
+
+If your next app runs on the same compute node and uses port 7860, you can reuse essentially the same command.
+If the app uses a different port, change both relevant ports. For example, if Gradio runs on 7861:
+```bash
+ssh -m hmac-sha2-512 -N -L 7861:erc-hpc-vm046:7861 k20122072@hpc.create.kcl.ac.uk
+```
+If Slurm gives you a different compute node, replace erc-hpc-vm046 with that node's hostname. So the reusable pattern is:
+```bash
+ssh -m hmac-sha2-512 -N -L LOCAL_PORT:COMPUTE_NODE:APP_PORT k20122072@hpc.create.kcl.ac.uk
+```
 ### 2) Running from the Command-Line 
 
 Please follow these instructions:  
