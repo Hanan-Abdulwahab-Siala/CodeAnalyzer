@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=mamba-gradio
+#SBATCH --job-name=code-analyzer-gradio
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
@@ -8,59 +8,61 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=04:00:00
-#SBATCH --output=/scratch/users/%u/mamba-gradio-%j.out
-#SBATCH --error=/scratch/users/%u/mamba-gradio-%j.err
+#SBATCH --output=/scratch/users/%u/code-analyzer-gradio-%j.out
+#SBATCH --error=/scratch/users/%u/code-analyzer-gradio-%j.err
 
 export PYTHONNOUSERSITE=1
 
 set -e
 
 echo "========================================"
-echo "Mamba Code Analyzer - KCL Gradio"
+echo "Unified Code Analyzer - Gradio"
 echo "========================================"
 
 echo
 echo "Compute node:"
 hostname
 
-# ============================================================
-# GPU CHECK
-# ============================================================
+# --------------------------------------------------
+# Check GPU
+# --------------------------------------------------
 
 echo
 echo "Checking GPU..."
 
 if ! nvidia-smi >/dev/null 2>&1; then
+
     echo
     echo "ERROR: No GPU is available on this node."
     echo "The job will not continue."
     echo
+
     exit 1
 fi
 
 echo
-echo "GPU detected:"
-nvidia-smi
+echo "GPU available:"
+nvidia-smi --query-gpu=name,memory.total --format=csv
 
-# ============================================================
+# --------------------------------------------------
 # Load CUDA
-# ============================================================
+# --------------------------------------------------
 
 echo
 echo "Loading CUDA..."
 module load cuda
 
-# ============================================================
-# Activate environment
-# ============================================================
+# --------------------------------------------------
+# Project
+# --------------------------------------------------
 
-cd "$HOME/Mamba-Code-Analyzer"
+cd "$HOME/Code-Analyzer"
 
 source .venv/bin/activate
 
-# ============================================================
+# --------------------------------------------------
 # Python
-# ============================================================
+# --------------------------------------------------
 
 echo
 echo "Python:"
@@ -70,9 +72,9 @@ echo
 echo "Python executable:"
 which python
 
-# ============================================================
-# PyTorch / CUDA CHECK
-# ============================================================
+# --------------------------------------------------
+# PyTorch / CUDA check
+# --------------------------------------------------
 
 echo
 echo "Checking PyTorch CUDA..."
@@ -93,40 +95,37 @@ if not torch.cuda.is_available():
 print('GPU:', torch.cuda.get_device_name(0))
 "
 
-# ============================================================
-# Gradio configuration
-# ============================================================
+# --------------------------------------------------
+# Gradio port
+# --------------------------------------------------
 
 export GRADIO_SERVER_PORT=7860
-export GRADIO_SERVER_NAME=0.0.0.0
 
 echo
 echo "========================================"
-echo "Gradio configuration"
+echo "Starting Gradio"
 echo "========================================"
-echo "Host: $GRADIO_SERVER_NAME"
-echo "Port: $GRADIO_SERVER_PORT"
 
 echo
-echo "Compute node:"
+echo "Node:"
 hostname
 
 echo
-echo "SSH tunnel command:"
-echo "ssh -m hmac-sha2-512 -L 7861:$(hostname):7860 k20122072@hpc.create.kcl.ac.uk"
+echo "Port:"
+echo "$GRADIO_SERVER_PORT"
 
+echo
+echo "Run this command on your LOCAL machine:"
+echo
+echo "ssh -L 7860:$(hostname):7860 $USER@$(hostname)"
 echo
 echo "Then open:"
-echo "http://localhost:7861"
-
 echo
-echo "========================================"
-
-# ============================================================
-# Start Gradio
-# ============================================================
-
+echo "http://localhost:7860"
 echo
-echo "Starting Gradio..."
+
+# --------------------------------------------------
+# Start application
+# --------------------------------------------------
 
 python app.py
