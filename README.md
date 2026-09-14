@@ -1165,25 +1165,25 @@ again whenever you want to check the status.
 The SLURM script contains:
 
 ```bash
-#SBATCH --output=/scratch/users/%u/mamba-%j.out
+#SBATCH --output=/scratch/users/%u/mambapy-%j.out
 ```
 
 `%j` is automatically replaced with the job ID. For example, if the JOBID is `37143242`, the output file is:
 
 ```
-/scratch/users/$USER/mamba-37143242.out
+/scratch/users/$USER/mambapy-37143242.out
 ```
 
 You can view it with:
 
 ```bash
-cat /scratch/users/$USER/mamba-37143242.out
+cat /scratch/users/$USER/mambapy-37143242.out
 ```
 
 To monitor it live:
 
 ```bash
-tail -f /scratch/users/$USER/mamba-37143242.out
+tail -f /scratch/users/$USER/mambapy-37143242.out
 ```
 
 Press `Ctrl + C` to stop monitoring.
@@ -1195,25 +1195,25 @@ Press `Ctrl + C` to stop monitoring.
 The SLURM script contains:
 
 ```bash
-#SBATCH --error=/scratch/users/%u/mamba-%j.err
+#SBATCH --error=/scratch/users/%u/mambapy-%j.err
 ```
 
 For job `37143242`, the error file is:
 
 ```
-/scratch/users/$USER/mamba-37143242.err
+/scratch/users/$USER/mambapy-37143242.err
 ```
 
 View it:
 
 ```bash
-cat /scratch/users/$USER/mamba-37143242.err
+cat /scratch/users/$USER/mambapy-37143242.err
 ```
 
 Or monitor it live:
 
 ```bash
-tail -f /scratch/users/$USER/mamba-37143242.err
+tail -f /scratch/users/$USER/mambapy-37143242.err
 ```
 
 If the file is empty, that is usually a good sign.
@@ -1258,34 +1258,7 @@ This allows the Mamba/Python Code Analyzer to run as a GPU-accelerated SLURM job
 ---
 
 **Note**
-You can modify the following line in KCL/run_kcl_analyze.sh file:
-```python
-python analyze.py input/sample.txt
-or
-python analyze.py input/sample.py
-```
-with one of the following:
-```python
-(version 1 and LoRA Adapter)
-python analyze.py input/sample.txt --model-version 1 --model-type "LoRA Adapter"
-or
-python analyze.py input/sample.py --model-version 1 --model-type "LoRA Adapter"
-
-(version 2 and LoRA Adapter)
-python analyze.py input/sample.txt --model-version 2 --model-type "LoRA Adapter"
-or
-python analyze.py input/sample.py --model-version 2 --model-type "LoRA Adapter"
-
-(version 1 and Full Model)
-python analyze.py input/sample.txt --model-version 1 --model-type "Full Model"
-or
-python analyze.py input/sample.py --model-version 1 --model-type "Full Model"
-
-(version 2 and Full Model)
-python analyze.py input/sample.txt --model-version 2 --model-type "Full Model"
-or
-python analyze.py input/sample.py --model-version 2 --model-type "Full Model"
-```
+You can modify the following line in the KCL/run_kcl_analyze.sh file as previously mentioned.
 
 ---
 If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
