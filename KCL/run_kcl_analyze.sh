@@ -16,7 +16,7 @@ export PYTHONNOUSERSITE=1
 set -e
 
 echo "========================================"
-echo "Mamba Code Analyzer - KCL GPU Job"
+echo "Unified Code Analyzer - KCL GPU Job"
 echo "========================================"
 
 echo
@@ -54,7 +54,7 @@ module load cuda
 # Project
 # --------------------------------------------------
 
-cd "$HOME/Mamba-Code-Analyzer"
+cd "$HOME/Code-Analyzer"
 
 source .venv/bin/activate
 
@@ -99,7 +99,43 @@ print('GPU:', torch.cuda.get_device_name(0))
 
 echo
 echo "Running inference..."
-python analyze.py input/sample.txt
+
+# ----------------------------------------------------------------
+# MAMBA
+# Mamba has ONE combined task:
+# Flaws + Refactoring
+# ----------------------------------------------------------------
+
+python analyze.py \
+    input/sample.txt \
+    --language Mamba \
+    --model-version 2 \
+    --model-type "LoRA Adapter" \
+    --output output/output.txt
+
+# ----------------------------------------------------------------
+# For Python Flaw Detection use:
+#
+# python analyze.py \
+#     input/Test1.py \
+#     --language Python \
+#     --task "Flaw Detection" \
+#     --model-version 2 \
+#     --model-type "LoRA Adapter" \
+#     --output output/output.txt
+#
+# ----------------------------------------------------------------
+# For Python Refactoring use:
+#
+# python analyze.py \
+#     input/Test1.py \
+#     --language Python \
+#     --task "Refactoring" \
+#     --model-version 1 \
+#     --model-type "LoRA Adapter" \
+#     --output output/output.txt
+#
+# ----------------------------------------------------------------
 
 # --------------------------------------------------
 # Finished
