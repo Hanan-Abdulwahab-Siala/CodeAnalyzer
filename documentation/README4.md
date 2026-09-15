@@ -272,6 +272,6 @@ This allows the Mamba/Python Code Analyzer to run as a GPU-accelerated SLURM job
 ---
 
 **Note**
-You can modify the following line in the KCL/run_kcl_analyze.sh file, as mentioned above.
+You can modify the `KCL/run_kcl_analyze.sh` file to perform the requested task, as described in the second method and explained in the shell script.
 
 ---
