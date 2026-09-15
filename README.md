@@ -147,13 +147,7 @@ extract_clean_dict()
 
 ### Formatting Output
 
-The function:
-
-```python
-format_output()
-```
-
-converts the parsed dictionary into readable output.
+We use a function that converts the parsed dictionary into readable output.
 
 Example:
 
