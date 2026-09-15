@@ -1,4 +1,4 @@
-## Running Via Gradio Web Interface
+## 1) Running Via Gradio Web Interface
 
 The Gradio interface can be used to:
 
@@ -19,9 +19,11 @@ From your local computer, connect to the remote server, for example:
 ```bash
 ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
 ```
-After connecting, you should see a shell prompt on the HPC login node.
+After connecting, you should see a shell prompt on the HPC login node:
+```bash
 k12345@arc-hpc-login3:~$
-
+```
+---
 #### 2. Go to the Project Directory
 
 Move into the Code Analyzer project:
@@ -157,6 +159,8 @@ for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeu
 ```
 
 Instead, you can use the same number that appears when you request a GPU job. I mentioned this earlier when you ran the `srun` command.
+
+---
 
 #### 8. Windows: Open the Browser
 
