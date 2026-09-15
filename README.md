@@ -145,7 +145,7 @@ The actual response depends on the model and the submitted code. The project inc
 extract_clean_dict()
 ```
 
-### Formatting Output
+## Formatting Output
 
 We use a function that converts the parsed dictionary into readable output.
 
