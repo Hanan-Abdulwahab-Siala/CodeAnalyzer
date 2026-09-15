@@ -162,26 +162,6 @@ def corrected_function():
 
 ---
 
-## Hardware Information
-
-The application provides hardware information through:
-
-```python
-get_hardware_info()
-```
-
-Example GPU output:
-
-```text
-GPU: NVIDIA ...
-CUDA: 12.x
-PyTorch: 2.x.x
-VRAM: 20.50 GB free / 24.00 GB total
-Compute capability: (8, 9)
-Dtype: torch.bfloat16
-```
----
-
 ## Supported Models
 
 The project uses models hosted on Hugging Face. You may need to make sure the required model repositories are accessible from your environment.
@@ -204,18 +184,26 @@ mistralai/Mistral-7B-v0.3
 - **Version 2:** 'HA-Siala/Detect-Flaws-v0.2'
 - **Version 1:** 'HA-Siala/RefactoringPy-v0.1'
 #### DeepSeek
+`Mamba`  
+- **Version 1:** `HA-Siala/Mamba-DeepSeek-v0.1` 
+`Python`
+- **Version 1:** 'HA-Siala/RefactoringPy-DeepSeek-v0.1'
 
 ### Full Models
 #### Mistral
 `Mamba`  
 - **Version 1:** `HA-Siala/Mamba-full-v0.1`
 - **Version 2:** `HA-Siala/Mamba-full-v0.2`
-
 `Python`
 - **Version 1:** 'HA-Siala/Detect-Flaws-full-v0.1'
 - **Version 2:** 'HA-Siala/Detect-Flaws-full-v0.2'
 - **Version 1:** 'HA-Siala/RefactoringPy-full-v0.1'
 #### DeepSeek
+`Mamba`
+- **Version 1:** 'HA-Siala/Mamba-DeepSeek-full-v0.1'
+`Python`
+- **Version 1:** 'HA-Siala/RefactoringPy-DeepSeek-full-v0.1'
+
 The full-model workflow loads the complete checkpoint directly.
 
 Please review the applicable model licenses and terms before redistributing model files or using them commercially.
