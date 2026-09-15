@@ -10,8 +10,10 @@ From your local computer, connect to the remote server, for example:
 ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
 ```
 After connecting, you should see a shell prompt on the HPC login node:
+```bash
 k12345@arc-hpc-login3:~$
-
+```
+---
 #### 2. Go to the Project Directory
 
 Move into the Code Analyzer project:
