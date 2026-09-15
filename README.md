@@ -108,6 +108,8 @@ pip install -r requirements.txt
 ### 3. [Running Using KCL CREATE HPC Workflow with Gradio](./documentation/README3.md)
 ### 4. [Running Using KCL CREATE HPC Workflow without Gradio](./documentation/README4.md)
 
+If you are not using the KCL CREATE environment, you can ignore the HPC scripts (3 and 4) and run the project using the normal Python environment.
+
 ---
 
 ## Expected Model Response
