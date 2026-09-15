@@ -9,8 +9,10 @@ From your local computer, connect to the KCL HPC login node:
 ```bash
 ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
 ```
-After connecting, you should see a shell prompt on the HPC login node.
+After connecting, you should see a shell prompt on the HPC login node:
+```bash
 k12345@arc-hpc-login3:~$
+```
 
 #### 2. Go to the Project Directory
 
@@ -41,7 +43,7 @@ pwd
 ```
 ---
 
-#### 3. Check the SLURM script and make the Script Executable
+#### 3. Check the SLURM Script and Make the Script Executable
 
 Run:
 
@@ -91,7 +93,7 @@ JOBID=37143242
 Your JOBID will be different each time you submit a new job.
 
 ---
-#### 5. Open the tunnel automatically
+#### 5. Open the Tunnel Automatically
 
 Open **PowerShell** or **Command Prompt**.
 
