@@ -2,14 +2,14 @@
 
 Please follow these instructions:  
 
-#### 1. Connect to the GPU provider
+#### 1. Connect to the GPU Provider
 
 From your local computer, connect to the remote server, for example:
 
 ```bash
 ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
 ```
-After connecting, you should see a shell prompt on the HPC login node.
+After connecting, you should see a shell prompt on the HPC login node:
 k12345@arc-hpc-login3:~$
 
 #### 2. Go to the Project Directory
@@ -61,7 +61,7 @@ cat input/sample.py
 
 ---
 
-#### 4. Ask for a GPU from the GPU provider:
+#### 4. Ask for a GPU from the GPU Provider
 For example, in KCL, we use:
 
 ```bash
@@ -77,7 +77,7 @@ Then:
 ```bash
 nvidia-smi
 ```
-Then:
+And then:
 
 ```bash
 module load cuda
@@ -118,7 +118,7 @@ It should point to something similar to:
 
 ---
 
-#### 5. Run the program
+#### 6. Run the Program
 
 Run the analyze program using one of the following:
 
