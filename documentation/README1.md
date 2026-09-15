@@ -65,7 +65,7 @@ cat input/sample.txt
 
 ---
 
-#### 4. Ask for GPU from GPU provider:
+#### 4. Ask for GPU from the GPU provider:
 For example, in KCL, we use:
 
 ```bash
@@ -132,20 +132,6 @@ Run the Gradio program:
 ```bash
 python app.py
 ```
-
-You should receive something similar to:
-
-```
-(.venv) k20122072@erc-hpc-vm046:~/Code-Analyzer$ python app.py
-============================================================
-Starting Unified Code Analyzer
-Model loading is manual.
-Gradio server: http://0.0.0.0:7860
-Port: 7860
-============================================================
-* Running on local URL:  http://0.0.0.0:7860
-* To create a public link, set `share=True` in `launch()`.
-```
 ---
 
 #### 6. Get HostName and Open Gradio
@@ -168,10 +154,11 @@ If Gradio is running in job 37241508, do:
 for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241508 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
 ```
 
+Instead, you can use the same number that appears when you request a GPU job. I mentioned this earlier when you ran the `srun` command.
+
 Step 8 — Windows: open the browser
 
-Open your browser and enter:
-
+Please leave both windows open, then open your browser and enter:
 ```bash
 http://localhost:7860
 ```
