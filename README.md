@@ -103,6 +103,11 @@ pip install -r requirements.txt
 ---
 ## Running
 
+1. [README 1](./documentation/README1.md)
+2. [README 2](./documentation/README2.md)
+3. [README 3](./documentation/README3.md)
+4. [README 4](./documentation/README4.md)
+
 ### 1) Running by Gradio Web Interface
 The Gradio interface can be used to:
 
