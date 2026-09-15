@@ -122,9 +122,166 @@ It should point to something similar to:
 
 Run the analyze program using one of the following:
 
+Mistral + Mamba + Version 1 + LoRA Adapter
 ```bash
-
+ python analyze.py \
+     input/sample.txt \
+     --language Mamba \
+     --model Mistral \
+     --model-version 1 \
+     --model-type "LoRA Adapter" \
+     --output output/output.txt
 ```
+
+Mistral + Mamba + Version 2 + LoRA Adapter
+```bash
+ python analyze.py \
+     input/sample.txt \
+     --language Mamba \
+     --model Mistral \
+     --model-version 2 \
+     --model-type "LoRA Adapter" \
+     --output output/output.txt
+```
+
+Mistral + Mamba + Version 1 + Full Model
+```bash
+ python analyze.py \
+     input/sample.txt \
+     --language Mamba \
+     --model Mistral \
+     --model-version 1 \
+     --model-type "Full Model" \
+     --output output/output.txt
+```
+
+Mistral + Mamba + Version 2 + Full Model
+```bash
+ python analyze.py \
+     input/sample.txt \
+     --language Mamba \
+     --model Mistral \
+     --model-version 2 \
+     --model-type "Full Model" \
+     --output output/output.txt
+```
+---
+Mistral + Python + Flaw Detection + Version 1 + LoRA Adapter
+```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model Mistral \
+     --task "Flaw Detection" \
+     --model-version 1 \
+     --model-type "LoRA Adapter" \
+     --output output/output.txt
+```
+
+Mistral + Python + Flaw Detection + Version 2 + LoRA Adapter
+```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model Mistral \
+     --task "Flaw Detection" \
+     --model-version 2 \
+     --model-type "LoRA Adapter" \
+     --output output/output.txt
+```
+
+Mistral + Python + Flaw Detection + Version 1 + Full Model
+```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model Mistral \
+     --task "Flaw Detection" \
+     --model-version 1 \
+     --model-type "Full Model" \
+     --output output/output.txt
+```
+
+Mistral + Python + Flaw Detection + Version 2 + Full Model
+```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model Mistral \
+     --task "Flaw Detection" \
+     --model-version 2 \
+     --model-type "Full Model" \
+     --output output/output.txt
+```
+---
+Mistral + Python + Refactoring + Version 1 + LoRA Adapter
+```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model Mistral \
+     --task "Refactoring" \
+     --model-version 1 \
+     --model-type "LoRA Adapter" \
+     --output output/output.txt
+```
+
+Mistral + Python + Refactoring + Version 1 + Full Model
+```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model Mistral \
+     --task "Refactoring" \
+     --model-version 1 \
+     --model-type "Full Model" \
+     --output output/output.txt
+```
+---
+DeepSeek + Mamba + Version 1 + LoRA Adapter
+```bash
+ python analyze.py \
+     input/sample.txt \
+     --language Mamba \
+     --model DeepSeek \
+     --model-version 1 \
+     --model-type "LoRA Adapter" \
+     --output output/output.txt
+```
+
+DeepSeek + Mamba + Version 1 + Full Model
+```bash
+ python analyze.py \
+     input/sample.txt \
+     --language Mamba \
+     --model DeepSeek \
+     --model-version 1 \
+     --model-type "Full Model" \
+     --output output/output.txt
+```
+---
+DeepSeek + Python + Version 1 + LoRA Adapter
+ ```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model DeepSeek \
+     --model-version 1 \
+     --model-type "LoRA Adapter" \
+     --output output/output.txt
+```
+
+DeepSeek + Python + Version 1 + Full Model
+```bash
+ python analyze.py \
+     input/sample.py \
+     --language Python \
+     --model DeepSeek \
+     --model-version 1 \
+     --model-type "Full Model" \
+     --output output/output.txt
+```
+
 You should receive something similar to:
 
 ```bash
