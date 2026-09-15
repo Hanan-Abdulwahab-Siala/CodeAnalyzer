@@ -1,4 +1,4 @@
-## Running via Gradio Web Interface
+## Running Via Gradio Web Interface
 
 The Gradio interface can be used to:
 
@@ -12,7 +12,7 @@ The Gradio interface can be used to:
 
 Please follow these instructions:  
 
-#### 1. Connect to the GPU provider
+#### 1. Connect to the GPU Provider
 
 From your local computer, connect to the remote server, for example:
 
@@ -67,7 +67,7 @@ cat input/sample.txt
 
 ---
 
-#### 4. Ask for GPU from the GPU provider:
+#### 4. Ask for GPU from the GPU Provider:
 For example, in KCL, we use:
 
 ```bash
@@ -127,7 +127,7 @@ It should point to something similar to:
 
 ---
 
-#### 5. Run the program
+#### 6. Run the Program
 
 Run the Gradio program:
 
@@ -136,7 +136,7 @@ python app.py
 ```
 ---
 
-#### 6. Get HostName and Open Gradio
+#### 7. Get HostName and Open Gradio
 Now go to your Windows PC and open a second CMD window. Now we want to check GPU jobs by using the following command:
 
 ```bash
@@ -158,7 +158,7 @@ for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeu
 
 Instead, you can use the same number that appears when you request a GPU job. I mentioned this earlier when you ran the `srun` command.
 
-Step 8 — Windows: open the browser
+#### 8. Windows: Open the Browser
 
 Please leave both windows open, then open your browser and enter:
 ```bash
