@@ -176,8 +176,8 @@ mistralai/Mistral-7B-v0.3
 ### LoRA Adapter Models
 #### Mistral
 `Mamba`  
-- **Version 1:** `HA-Siala/Mamba-v0.1`
-- **Version 2:** `HA-Siala/Mamba-v0.2`
+- **Version 1:** 'HA-Siala/Mamba-v0.1'
+- **Version 2:** 'HA-Siala/Mamba-v0.2'
   
 `Python`
 - **Version 1:** 'HA-Siala/Detect-Flaws-v0.1'
@@ -185,15 +185,16 @@ mistralai/Mistral-7B-v0.3
 - **Version 1:** 'HA-Siala/RefactoringPy-v0.1'
 #### DeepSeek
 `Mamba`  
-- **Version 1:** `HA-Siala/Mamba-DeepSeek-v0.1` 
+- **Version 1:** 'HA-Siala/Mamba-DeepSeek-v0.1' 
+
 `Python`
 - **Version 1:** 'HA-Siala/RefactoringPy-DeepSeek-v0.1'
 
 ### Full Models
 #### Mistral
 `Mamba`  
-- **Version 1:** `HA-Siala/Mamba-full-v0.1`
-- **Version 2:** `HA-Siala/Mamba-full-v0.2`
+- **Version 1:** 'HA-Siala/Mamba-full-v0.1'
+- **Version 2:** 'HA-Siala/Mamba-full-v0.2'
 `Python`
 - **Version 1:** 'HA-Siala/Detect-Flaws-full-v0.1'
 - **Version 2:** 'HA-Siala/Detect-Flaws-full-v0.2'
