@@ -275,6 +275,3 @@ This allows the Mamba/Python Code Analyzer to run as a GPU-accelerated SLURM job
 You can modify the following line in the KCL/run_kcl_analyze.sh file, as mentioned above.
 
 ---
-If you are not using the KCL CREATE environment, you can ignore the HPC scripts and run the project using the normal Python environment.
-
----
