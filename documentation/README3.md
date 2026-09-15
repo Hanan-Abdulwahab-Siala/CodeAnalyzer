@@ -13,7 +13,7 @@ After connecting, you should see a shell prompt on the HPC login node:
 ```bash
 k12345@arc-hpc-login3:~$
 ```
-
+---
 #### 2. Go to the Project Directory
 
 Move into the Code Analyzer project:
@@ -110,6 +110,8 @@ for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeu
 ```
 where 37243372 is a JOBID
 
+---
+
 #### 6. Open Gradio in Your Browser
 
 Once the SSH tunnel is active, open Chrome, Edge, Firefox, or another browser.
@@ -122,6 +124,7 @@ http://localhost:7860
 
 The Gradio interface should appear.
 
+---
 #### 7. Stopping the Application
 
 When you are finished, cancel the SLURM job:
