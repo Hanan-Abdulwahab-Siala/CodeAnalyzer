@@ -129,7 +129,7 @@ Mistral + Mamba + Version 1 + LoRA Adapter
  python analyze.py \
      input/sample.txt \
      --language Mamba \
-     --model Mistral \
+     --model-family Mistral \
      --model-version 1 \
      --model-type "LoRA Adapter" \
      --output output/output.txt
@@ -140,7 +140,7 @@ Mistral + Mamba + Version 2 + LoRA Adapter
  python analyze.py \
      input/sample.txt \
      --language Mamba \
-     --model Mistral \
+     --model-family Mistral \
      --model-version 2 \
      --model-type "LoRA Adapter" \
      --output output/output.txt
@@ -151,7 +151,7 @@ Mistral + Mamba + Version 1 + Full Model
  python analyze.py \
      input/sample.txt \
      --language Mamba \
-     --model Mistral \
+     --model-family Mistral \
      --model-version 1 \
      --model-type "Full Model" \
      --output output/output.txt
@@ -162,7 +162,7 @@ Mistral + Mamba + Version 2 + Full Model
  python analyze.py \
      input/sample.txt \
      --language Mamba \
-     --model Mistral \
+     --model-family Mistral \
      --model-version 2 \
      --model-type "Full Model" \
      --output output/output.txt
@@ -173,7 +173,7 @@ Mistral + Python + Flaw Detection + Version 1 + LoRA Adapter
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model Mistral \
+     --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 1 \
      --model-type "LoRA Adapter" \
@@ -185,7 +185,7 @@ Mistral + Python + Flaw Detection + Version 2 + LoRA Adapter
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model Mistral \
+     --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 2 \
      --model-type "LoRA Adapter" \
@@ -197,7 +197,7 @@ Mistral + Python + Flaw Detection + Version 1 + Full Model
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model Mistral \
+     --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 1 \
      --model-type "Full Model" \
@@ -209,7 +209,7 @@ Mistral + Python + Flaw Detection + Version 2 + Full Model
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model Mistral \
+     --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 2 \
      --model-type "Full Model" \
@@ -221,7 +221,7 @@ Mistral + Python + Refactoring + Version 1 + LoRA Adapter
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model Mistral \
+     --model-family Mistral \
      --task "Refactoring" \
      --model-version 1 \
      --model-type "LoRA Adapter" \
@@ -233,7 +233,7 @@ Mistral + Python + Refactoring + Version 1 + Full Model
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model Mistral \
+     --model-family Mistral \
      --task "Refactoring" \
      --model-version 1 \
      --model-type "Full Model" \
@@ -245,7 +245,7 @@ DeepSeek + Mamba + Version 1 + LoRA Adapter
  python analyze.py \
      input/sample.txt \
      --language Mamba \
-     --model DeepSeek \
+     --model-family DeepSeek \
      --model-version 1 \
      --model-type "LoRA Adapter" \
      --output output/output.txt
@@ -256,7 +256,7 @@ DeepSeek + Mamba + Version 1 + Full Model
  python analyze.py \
      input/sample.txt \
      --language Mamba \
-     --model DeepSeek \
+     --model-family DeepSeek \
      --model-version 1 \
      --model-type "Full Model" \
      --output output/output.txt
@@ -267,7 +267,7 @@ DeepSeek + Python + Version 1 + LoRA Adapter
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model DeepSeek \
+     --model-family DeepSeek \
      --model-version 1 \
      --model-type "LoRA Adapter" \
      --output output/output.txt
@@ -278,7 +278,7 @@ DeepSeek + Python + Version 1 + Full Model
  python analyze.py \
      input/sample.py \
      --language Python \
-     --model DeepSeek \
+     --model-family DeepSeek \
      --model-version 1 \
      --model-type "Full Model" \
      --output output/output.txt
