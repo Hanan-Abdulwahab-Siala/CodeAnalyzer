@@ -131,8 +131,7 @@ Mistral + Mamba + Version 1 + LoRA Adapter
      --language Mamba \
      --model-family Mistral \
      --model-version 1 \
-     --model-type "LoRA Adapter" \
-     --output output/output.txt
+     --model-type "LoRA Adapter" 
 ```
 
 Mistral + Mamba + Version 2 + LoRA Adapter
@@ -142,8 +141,7 @@ Mistral + Mamba + Version 2 + LoRA Adapter
      --language Mamba \
      --model-family Mistral \
      --model-version 2 \
-     --model-type "LoRA Adapter" \
-     --output output/output.txt
+     --model-type "LoRA Adapter" 
 ```
 
 Mistral + Mamba + Version 1 + Full Model
@@ -153,8 +151,7 @@ Mistral + Mamba + Version 1 + Full Model
      --language Mamba \
      --model-family Mistral \
      --model-version 1 \
-     --model-type "Full Model" \
-     --output output/output.txt
+     --model-type "Full Model" 
 ```
 
 Mistral + Mamba + Version 2 + Full Model
@@ -164,8 +161,7 @@ Mistral + Mamba + Version 2 + Full Model
      --language Mamba \
      --model-family Mistral \
      --model-version 2 \
-     --model-type "Full Model" \
-     --output output/output.txt
+     --model-type "Full Model" 
 ```
 ---
 Mistral + Python + Flaw Detection + Version 1 + LoRA Adapter
@@ -176,8 +172,7 @@ Mistral + Python + Flaw Detection + Version 1 + LoRA Adapter
      --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 1 \
-     --model-type "LoRA Adapter" \
-     --output output/output.txt
+     --model-type "LoRA Adapter" 
 ```
 
 Mistral + Python + Flaw Detection + Version 2 + LoRA Adapter
@@ -188,8 +183,7 @@ Mistral + Python + Flaw Detection + Version 2 + LoRA Adapter
      --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 2 \
-     --model-type "LoRA Adapter" \
-     --output output/output.txt
+     --model-type "LoRA Adapter" 
 ```
 
 Mistral + Python + Flaw Detection + Version 1 + Full Model
@@ -200,8 +194,7 @@ Mistral + Python + Flaw Detection + Version 1 + Full Model
      --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 1 \
-     --model-type "Full Model" \
-     --output output/output.txt
+     --model-type "Full Model" 
 ```
 
 Mistral + Python + Flaw Detection + Version 2 + Full Model
@@ -212,8 +205,7 @@ Mistral + Python + Flaw Detection + Version 2 + Full Model
      --model-family Mistral \
      --task "Flaw Detection" \
      --model-version 2 \
-     --model-type "Full Model" \
-     --output output/output.txt
+     --model-type "Full Model" 
 ```
 ---
 Mistral + Python + Refactoring + Version 1 + LoRA Adapter
@@ -224,8 +216,7 @@ Mistral + Python + Refactoring + Version 1 + LoRA Adapter
      --model-family Mistral \
      --task "Refactoring" \
      --model-version 1 \
-     --model-type "LoRA Adapter" \
-     --output output/output.txt
+     --model-type "LoRA Adapter" 
 ```
 
 Mistral + Python + Refactoring + Version 1 + Full Model
@@ -236,8 +227,7 @@ Mistral + Python + Refactoring + Version 1 + Full Model
      --model-family Mistral \
      --task "Refactoring" \
      --model-version 1 \
-     --model-type "Full Model" \
-     --output output/output.txt
+     --model-type "Full Model" 
 ```
 ---
 DeepSeek + Mamba + Version 1 + LoRA Adapter
@@ -247,8 +237,7 @@ DeepSeek + Mamba + Version 1 + LoRA Adapter
      --language Mamba \
      --model-family DeepSeek \
      --model-version 1 \
-     --model-type "LoRA Adapter" \
-     --output output/output.txt
+     --model-type "LoRA Adapter" 
 ```
 
 DeepSeek + Mamba + Version 1 + Full Model
@@ -258,8 +247,7 @@ DeepSeek + Mamba + Version 1 + Full Model
      --language Mamba \
      --model-family DeepSeek \
      --model-version 1 \
-     --model-type "Full Model" \
-     --output output/output.txt
+     --model-type "Full Model" 
 ```
 ---
 DeepSeek + Python + Version 1 + LoRA Adapter
@@ -269,8 +257,7 @@ DeepSeek + Python + Version 1 + LoRA Adapter
      --language Python \
      --model-family DeepSeek \
      --model-version 1 \
-     --model-type "LoRA Adapter" \
-     --output output/output.txt
+     --model-type "LoRA Adapter" 
 ```
 
 DeepSeek + Python + Version 1 + Full Model
@@ -280,8 +267,7 @@ DeepSeek + Python + Version 1 + Full Model
      --language Python \
      --model-family DeepSeek \
      --model-version 1 \
-     --model-type "Full Model" \
-     --output output/output.txt
+     --model-type "Full Model" 
 ```
 
 The output will be saved to: output/output.txt
