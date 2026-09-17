@@ -170,7 +170,7 @@ Model identifiers used by the project include:
 
 ### Base Model
 
-- 👉 mistralai/Mistral-7B-v0.3](https://huggingface.co/mistralai/Mistral-7B-v0.3)
+- 👉 [mistralai/Mistral-7B-v0.3](https://huggingface.co/mistralai/Mistral-7B-v0.3)
 
 ### LoRA Adapter Models
 #### Mistral
@@ -196,7 +196,6 @@ Model identifiers used by the project include:
 - 👉 [Version 1: HA-Siala/Mamba-full-v0.1](https://huggingface.co/HA-Siala/Mamba-full-v0.1)  
 - 👉 [Version 2: HA-Siala/Mamba-full-v0.2](https://huggingface.co/HA-Siala/Mamba-full-v0.2)  
 `Python`
-- **Version 1:** 'HA-Siala/Detect-Flaws-full-v0.1'
 - 👉 [Version 1: HA-Siala/Detect-Flaws-full-v0.1](https://huggingface.co/HA-Siala/Detect-Flaws-full-v0.1)
 - 👉 [Version 2: HA-Siala/Detect-Flaws-full-v0.2](https://huggingface.co/HA-Siala/Detect-Flaws-full-v0.2)
 - 👉 [Version 1: HA-Siala/RefactoringPy-full-v0.1](https://huggingface.co/HA-Siala/RefactoringPy-full-v0.1)
