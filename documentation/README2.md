@@ -124,12 +124,7 @@ Mistral + Mamba + Version 1 + LoRA Adapter
 
 Mistral + Mamba + Version 2 + LoRA Adapter
 ```bash
- python analyze.py \
-     input/sample.txt \
-     --language Mamba \
-     --model-family Mistral \
-     --model-version 2 \
-     --model-type "LoRA Adapter" 
+ python analyze.py input/sample.txt --language Mamba --model-family Mistral --model-version 2 --model-type "LoRA Adapter" 
 ```
 
 Mistral + Mamba + Version 1 + Full Model
