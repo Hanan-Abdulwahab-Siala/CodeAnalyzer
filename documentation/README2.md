@@ -87,17 +87,11 @@ module load cuda
 
 ---
 
-#### 5. Check the Python Virtual Environment
-The project should contain a Python virtual environment:
+#### 5. Activate the Python Virtual Environment
+Activate the virtual environment:
 
 ```bash
-ls .venv
-```
-
-Activate it:
-
-```bash
-source .venv/bin/activate
+. ~/venvs/bin/activate
 ```
 
 Check Python:
@@ -115,9 +109,8 @@ which python
 It should point to something similar to:
 
 ```
-.../Code-Analyzer/.venv/bin/python
+.../venvs/bin/python
 ```
-
 ---
 
 #### 6. Run the Program
