@@ -179,22 +179,12 @@ DeepSeek + Mamba + Version 1 + Full Model
 ---
 DeepSeek + Python + Version 1 + LoRA Adapter
  ```bash
- python analyze.py \
-     input/sample.py \
-     --language Python \
-     --model-family DeepSeek \
-     --model-version 1 \
-     --model-type "LoRA Adapter" 
+ python analyze.py input/sample.py --language Python --model-family DeepSeek --model-version 1 --model-type "LoRA Adapter" 
 ```
 
 DeepSeek + Python + Version 1 + Full Model
 ```bash
- python analyze.py \
-     input/sample.py \
-     --language Python \
-     --model-family DeepSeek \
-     --model-version 1 \
-     --model-type "Full Model" 
+ python analyze.py input/sample.py --language Python --model-family DeepSeek --model-version 1 --model-type "Full Model" 
 ```
 
 The output will be saved to: output/output.txt
