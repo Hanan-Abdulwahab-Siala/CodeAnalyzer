@@ -144,13 +144,7 @@ Mistral + Python + Flaw Detection + Version 1 + LoRA Adapter
 
 Mistral + Python + Flaw Detection + Version 2 + LoRA Adapter
 ```bash
- python analyze.py \
-     input/sample.py \
-     --language Python \
-     --model-family Mistral \
-     --task "Flaw Detection" \
-     --model-version 2 \
-     --model-type "LoRA Adapter" 
+ python analyze.py input/sample.py --language Python --model-family Mistral --task "Flaw Detection" --model-version 2 --model-type "LoRA Adapter" 
 ```
 
 Mistral + Python + Flaw Detection + Version 1 + Full Model
