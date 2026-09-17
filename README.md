@@ -202,7 +202,8 @@ mistralai/Mistral-7B-v0.3
 #### DeepSeek
 `Mamba`
 - **Version 1:** 'HA-Siala/Mamba-DeepSeek-full-v0.1'
-  
+- 👉 [Version 1](https://huggingface.co/HA-Siala/Mamba-DeepSeek-full-v0.1)
+
 `Python`
 - **Version 1:** 'HA-Siala/RefactoringPy-DeepSeek-full-v0.1'
 
