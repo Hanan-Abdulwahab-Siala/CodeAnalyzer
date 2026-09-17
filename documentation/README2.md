@@ -154,55 +154,27 @@ Mistral + Python + Flaw Detection + Version 1 + Full Model
 
 Mistral + Python + Flaw Detection + Version 2 + Full Model
 ```bash
- python analyze.py \
-     input/sample.py \
-     --language Python \
-     --model-family Mistral \
-     --task "Flaw Detection" \
-     --model-version 2 \
-     --model-type "Full Model" 
+ python analyze.py input/sample.py --language Python --model-family Mistral --task "Flaw Detection" --model-version 2 --model-type "Full Model" 
 ```
 ---
 Mistral + Python + Refactoring + Version 1 + LoRA Adapter
 ```bash
- python analyze.py \
-     input/sample.py \
-     --language Python \
-     --model-family Mistral \
-     --task "Refactoring" \
-     --model-version 1 \
-     --model-type "LoRA Adapter" 
+ python analyze.py input/sample.py --language Python --model-family Mistral --task "Refactoring" --model-version 1 --model-type "LoRA Adapter" 
 ```
 
 Mistral + Python + Refactoring + Version 1 + Full Model
 ```bash
- python analyze.py \
-     input/sample.py \
-     --language Python \
-     --model-family Mistral \
-     --task "Refactoring" \
-     --model-version 1 \
-     --model-type "Full Model" 
+ python analyze.py input/sample.py --language Python --model-family Mistral --task "Refactoring" --model-version 1 --model-type "Full Model" 
 ```
 ---
 DeepSeek + Mamba + Version 1 + LoRA Adapter
 ```bash
- python analyze.py \
-     input/sample.txt \
-     --language Mamba \
-     --model-family DeepSeek \
-     --model-version 1 \
-     --model-type "LoRA Adapter" 
+ python analyze.py input/sample.txt --language Mamba --model-family DeepSeek --model-version 1 --model-type "LoRA Adapter" 
 ```
 
 DeepSeek + Mamba + Version 1 + Full Model
 ```bash
- python analyze.py \
-     input/sample.txt \
-     --language Mamba \
-     --model-family DeepSeek \
-     --model-version 1 \
-     --model-type "Full Model" 
+ python analyze.py input/sample.txt --language Mamba --model-family DeepSeek --model-version 1 --model-type "Full Model" 
 ```
 ---
 DeepSeek + Python + Version 1 + LoRA Adapter
