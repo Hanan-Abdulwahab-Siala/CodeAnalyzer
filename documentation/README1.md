@@ -44,6 +44,7 @@ You should see files such as:
 analyze.py
 app.py
 input/
+...
 ```
 
 You can also check your current directory:
@@ -59,12 +60,14 @@ Check the input file:
 
 ```bash
 ls -lh input/sample.txt
+ls -lh input/sample.py
 ```
 
 You can also test:
 
 ```bash
 cat input/sample.txt
+cat input/sample.py
 ```
 
 ---
@@ -144,11 +147,20 @@ We got, for example:
 
 If your Gradio is running in job 37241627, do:
 ```bash
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j Jupyter Lab 37241627 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
+
+or
+
 for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241627 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
+
 ```
 If Gradio is running in job 37241508, do:
 
 ```bash
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j Jupyter Lab 37241508 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
+
+or
+
 for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241508 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
 ```
 
