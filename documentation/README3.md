@@ -34,6 +34,7 @@ You should see files such as:
 analyze.py
 app.py
 input/
+...
 ```
 
 You can also check your current directory:
