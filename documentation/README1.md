@@ -60,6 +60,7 @@ Check the input file:
 
 ```bash
 ls -lh input/sample.txt
+or
 ls -lh input/sample.py
 ```
 
@@ -67,6 +68,7 @@ You can also test:
 
 ```bash
 cat input/sample.txt
+or
 cat input/sample.py
 ```
 
