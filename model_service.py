@@ -1,549 +1,167 @@
-# -----------------------------------------------------------------------------
-# Unified model service
-#
-# Inference behavior is kept as close as possible to the original standalone
-# Mistral and DeepSeek programs.
-# -----------------------------------------------------------------------------
-
 import ast
 import re
 import threading
+import time
+import gc
 
 import torch
-
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-)
-
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
-
-
-# -----------------------------------------------------------------------------
-# Device / dtype
-# -----------------------------------------------------------------------------
-
-# Match the original programs.
-DEVICE = (
-    "cuda:0"
-    if torch.cuda.is_available()
-    else "cpu"
-)
-
-# Match the original programs:
-# bfloat16 on CUDA.
-# float32 only when CUDA is unavailable.
-TORCH_DTYPE = (
-    torch.bfloat16
-    if torch.cuda.is_available()
-    else torch.float32
-)
-
-
-# -----------------------------------------------------------------------------
-# Base models
-# -----------------------------------------------------------------------------
-
-MISTRAL_BASE = (
-    "mistralai/Mistral-7B-v0.3"
-)
-
-DEEPSEEK_BASE = (
-    "deepseek-ai/deepseek-coder-6.7b-base"
-)
-
-
-# -----------------------------------------------------------------------------
-# Mistral checkpoints
-# -----------------------------------------------------------------------------
-
+# ------------------------------------------------------------
+MISTRAL_BASE_MODEL = "mistralai/Mistral-7B-v0.3"
+DEEPSEEK_BASE_MODEL = "deepseek-ai/deepseek-coder-6.7b-base"
+# ------------------------------------------------------------
 MISTRAL_CHECKPOINTS = {
-
-    "Mamba": {
-
-        "LoRA Adapter": {
-            1: "HA-Siala/Mamba-v0.1",
-            2: "HA-Siala/Mamba-v0.2",
-        },
-
-        "Full Model": {
-            1: "HA-Siala/Mamba-full-v0.1",
-            2: "HA-Siala/Mamba-full-v0.2",
-        },
-    },
-
-    "Python": {
-
-        "LoRA Adapter": {
-
-            "Flaw Detection": {
-                1: "HA-Siala/Detect-Flaws-v0.1",
-                2: "HA-Siala/Detect-Flaws-v0.2",
-            },
-
-            "Refactoring": {
-                1: "HA-Siala/RefactoringPy-v0.1",
-            },
-        },
-
-        "Full Model": {
-
-            "Flaw Detection": {
-                1: "HA-Siala/Detect-Flaws-full-v0.1",
-                2: "HA-Siala/Detect-Flaws-full-v0.2",
-            },
-
-            "Refactoring": {
-                1: "HA-Siala/RefactoringPy-full-v0.1",
-            },
-        },
-    },
+    ("Mamba", "Flaws + Refactoring", 1, "LoRA Adapter"):
+        "HA-Siala/Mamba-v0.1",
+    ("Mamba", "Flaws + Refactoring", 2, "LoRA Adapter"):
+        "HA-Siala/Mamba-v0.2",
+    ("Mamba", "Flaws + Refactoring", 1, "Full Model"):
+        "HA-Siala/Mamba-full-v0.1",
+    ("Mamba", "Flaws + Refactoring", 2, "Full Model"):
+        "HA-Siala/Mamba-full-v0.2",
+    ("Python", "Flaw Detection", 1, "LoRA Adapter"):
+        "HA-Siala/Detect-Flaws-v0.1",
+    ("Python", "Flaw Detection", 2, "LoRA Adapter"):
+        "HA-Siala/Detect-Flaws-v0.2",
+    ("Python", "Flaw Detection", 1, "Full Model"):
+        "HA-Siala/Detect-Flaws-full-v0.1",
+    ("Python", "Flaw Detection", 2, "Full Model"):
+        "HA-Siala/Detect-Flaws-full-v0.2",
+    ("Python", "Refactoring", 1, "LoRA Adapter"):
+        "HA-Siala/RefactoringPy-v0.1",
+    ("Python", "Refactoring", 1, "Full Model"):
+        "HA-Siala/RefactoringPy-full-v0.1",
 }
-
-
-# -----------------------------------------------------------------------------
-# DeepSeek checkpoints
-# -----------------------------------------------------------------------------
-
+# ------------------------------------------------------------
 DEEPSEEK_CHECKPOINTS = {
-
-    "Python": {
-
-        "LoRA Adapter":
-            "HA-Siala/RefactoringPy-DeepSeek-v0.1",
-
-        "Full Model":
-            "HA-Siala/RefactoringPy-DeepSeek-full-v0.1",
-    },
-
-    "Mamba": {
-
-        "LoRA Adapter":
-            "HA-Siala/Mamba-DeepSeek-v0.1",
-
-        "Full Model":
-            "HA-Siala/Mamba-DeepSeek-full-v0.1",
-    },
+    ("Python", 1, "LoRA Adapter"):
+        "HA-Siala/RefactoringPy-DeepSeek-v0.1",
+    ("Python", 1, "Full Model"):
+        "HA-Siala/RefactoringPy-DeepSeek-full-v0.1",
+    ("Mamba", 1, "LoRA Adapter"):
+        "HA-Siala/Mamba-DeepSeek-v0.1",
+    ("Mamba", 1, "Full Model"):
+        "HA-Siala/Mamba-DeepSeek-full-v0.1",
 }
-
-
-# -----------------------------------------------------------------------------
-# Global model state
-# -----------------------------------------------------------------------------
-
+# ------------------------------------------------------------
+MODEL_LOCK = threading.Lock()
+INFERENCE_LOCK = threading.Lock()
+# ------------------------------------------------------------
 MODEL = None
 TOKENIZER = None
-
-LOADED_MODEL_FAMILY = None
-LOADED_LANGUAGE = None
-LOADED_TASK = None
-LOADED_VERSION = None
-LOADED_MODEL_TYPE = None
-LOADED_CHECKPOINT = None
-
-MODEL_LOCK = threading.Lock()
-
-
-# -----------------------------------------------------------------------------
-# Prompt generation
-# -----------------------------------------------------------------------------
-
-def generate_mistral_prompt(
-    content,
-    language,
-    task,
-):
-    """
-    Exact Mistral prompt structure from the original programs.
-    """
-
-    if language == "Mamba":
-
-        instruction = (
-            "Analyze the following Mamba code, detect any flaws, "
-            "with a short explanation, and give one or more corrected "
-            "versions of the code. Ensure that none of the refactored "
-            "options repeat or reproduce the original code; only the "
-            "improved version should be shown:"
-        )
-
-    elif language == "Python":
-
-        instruction = (
-            "Analyze the following Python code, identify any flaws, "
-            "with a short explanation, and give one or more corrected "
-            "versions of the code, including a brief explanation of "
-            "each correction approach:"
-        )
-
-    else:
-
-        raise ValueError(
-            f"Unsupported Mistral language: {language}"
-        )
-
-    # Exact wrapper from the original Mistral programs.
-    prompt = f"""Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately solves the following Task:
-
-### Instruction:
-{instruction}
-
-### Code:
-{content}
-### Response:
-"""
-
-    return prompt
-
-
-def generate_deepseek_prompt(
-    content,
-    language,
-):
-    """
-    Exact DeepSeek prompt structure from the original program.
-    """
-
-    if language == "Python":
-
-        instruction = (
-            "Analyze the following Python code, detect any flaws, "
-            "with a short explanation, and give one or more corrected "
-            "versions of the code. Ensure that none of the refactored "
-            "options repeat or reproduce the original code; only the "
-            "improved version should be shown."
-        )
-
-    elif language == "Mamba":
-
-        instruction = (
-            "Analyze the following Mamba code, detect any flaws, "
-            "with a short explanation, and give one or more corrected "
-            "versions of the code. Ensure that none of the refactored "
-            "options repeat or reproduce the original code; only the "
-            "improved version should be shown."
-        )
-
-    else:
-
-        raise ValueError(
-            f"Unsupported DeepSeek language: {language}"
-        )
-
-    # Exact wrapper from the original DeepSeek program.
-    prompt = f"""You are an AI programming assistant, utilizing the DeepSeek Coder model.
-### Instruction:
-{instruction}
-
-### Input:
-{content}
-
-### Response:
-"""
-
-    return prompt
-
-
-# -----------------------------------------------------------------------------
-# Public prompt function used by app.py
-# -----------------------------------------------------------------------------
-
-def generate_prompt(
-    language,
-    task,
-    content,
-    model_family,
-):
-    """
-    Generate the prompt corresponding to the selected model.
-
-    This function intentionally uses the supplied configuration instead of
-    requiring the model to be loaded first.
-    """
-
-    if model_family == "Mistral":
-
-        return generate_mistral_prompt(
-            content=content,
-            language=language,
-            task=task,
-        )
-
-    if model_family == "DeepSeek":
-
-        return generate_deepseek_prompt(
-            content=content,
-            language=language,
-        )
-
-    raise ValueError(
-        f"Unsupported model family: {model_family}"
+MODEL_INFO = None
+# ------------------------------------------------------------
+def _clear_cuda_cache():
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+# ------------------------------------------------------------
+def _load_mistral(language, task, version, model_type):
+    key = (
+        language,
+        task,
+        version,
+        model_type,
     )
-
-
-# -----------------------------------------------------------------------------
-# Model loading
-# -----------------------------------------------------------------------------
-
-def _load_mistral(
-    language,
-    task,
-    version,
-    model_type,
-):
-    """
-    Load Mistral using the same mechanism as the original programs.
-    """
-
-    if language not in MISTRAL_CHECKPOINTS:
-
+    if key not in MISTRAL_CHECKPOINTS:
         raise ValueError(
-            f"Unsupported Mistral language: {language}"
+            "No Mistral checkpoint configured for: "
+            f"{key}"
         )
-
-    if model_type not in MISTRAL_CHECKPOINTS[language]:
-
-        raise ValueError(
-            f"Unsupported Mistral model type: {model_type}"
-        )
-
-    checkpoint_group = (
-        MISTRAL_CHECKPOINTS[language][model_type]
+    checkpoint = MISTRAL_CHECKPOINTS[key]
+    tokenizer = AutoTokenizer.from_pretrained(
+        MISTRAL_BASE_MODEL,
+        use_fast=True,
     )
-
-    # ---------------------------------------------------------
-    # Mamba
-    # ---------------------------------------------------------
-
-    if language == "Mamba":
-
-        checkpoint = checkpoint_group.get(version)
-
-    # ---------------------------------------------------------
-    # Python
-    # ---------------------------------------------------------
-
-    else:
-
-        if task not in checkpoint_group:
-
-            raise ValueError(
-                f"Unsupported Mistral Python task: {task}"
-            )
-
-        checkpoint = (
-            checkpoint_group[task].get(version)
-        )
-
-    if checkpoint is None:
-
-        raise ValueError(
-            "No Mistral checkpoint for "
-            f"language={language}, "
-            f"task={task}, "
-            f"version={version}, "
-            f"model_type={model_type}"
-        )
-
-    # ---------------------------------------------------------
-    # LoRA Adapter
-    # ---------------------------------------------------------
-
+    tokenizer.pad_token = tokenizer.unk_token
+    tokenizer.padding_side = "left"
     if model_type == "LoRA Adapter":
-
-        # Match original Mistral LoRA tokenizer.
-        tokenizer = AutoTokenizer.from_pretrained(
-            MISTRAL_BASE,
-            use_fast=True,
-        )
-
-        tokenizer.pad_token = tokenizer.unk_token
-        tokenizer.padding_side = "left"
-
-        # Match original Mistral base model.
-        model = AutoModelForCausalLM.from_pretrained(
-            MISTRAL_BASE,
-            torch_dtype=TORCH_DTYPE,
+        base_model = AutoModelForCausalLM.from_pretrained(
+            MISTRAL_BASE_MODEL,
+            torch_dtype=torch.bfloat16,
             device_map="auto",
         )
-
-        # Match original Mistral adapter loading.
         model = PeftModel.from_pretrained(
-            model,
+            base_model,
             checkpoint,
-            torch_dtype=TORCH_DTYPE,
+            torch_dtype=torch.bfloat16,
             is_trainable=False,
         )
-
-    # ---------------------------------------------------------
-    # Full Model
-    # ---------------------------------------------------------
-
     else:
-
-        # Match original Mistral full-model loading.
         model = AutoModelForCausalLM.from_pretrained(
             checkpoint,
-            torch_dtype=TORCH_DTYPE,
+            torch_dtype=torch.bfloat16,
             device_map="auto",
-            low_cpu_mem_usage=True,
         )
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            checkpoint,
-            use_fast=True,
-        )
-
-        tokenizer.pad_token = tokenizer.unk_token
-        tokenizer.padding_side = "left"
-
     model.eval()
-
     return (
         model,
         tokenizer,
         checkpoint,
     )
-
-
-def _load_deepseek(
-    language,
-    model_type,
-):
-    """
-    Load DeepSeek using the same mechanism as the original program.
-    """
-
-    if language not in DEEPSEEK_CHECKPOINTS:
-
-        raise ValueError(
-            f"Unsupported DeepSeek language: {language}"
-        )
-
-    if model_type not in DEEPSEEK_CHECKPOINTS[language]:
-
-        raise ValueError(
-            f"Unsupported DeepSeek model type: {model_type}"
-        )
-
-    checkpoint = (
-        DEEPSEEK_CHECKPOINTS[language][model_type]
+# ------------------------------------------------------------
+def _load_deepseek(language, version, model_type):
+    key = (
+        language,
+        version,
+        model_type,
     )
-
-    # ---------------------------------------------------------
-    # LoRA Adapter
-    # ---------------------------------------------------------
-
+    if key not in DEEPSEEK_CHECKPOINTS:
+        raise ValueError(
+            "No DeepSeek checkpoint configured for: "
+            f"{key}"
+        )
+    checkpoint = DEEPSEEK_CHECKPOINTS[key]
+# ------------------------------------------------------------
     if model_type == "LoRA Adapter":
-
-        # Match original DeepSeek LoRA tokenizer.
         tokenizer = AutoTokenizer.from_pretrained(
             checkpoint,
             trust_remote_code=True,
         )
-
         if tokenizer.pad_token is None:
-
-            tokenizer.pad_token = (
-                tokenizer.eos_token
-            )
-
-        # Match original DeepSeek base model.
-        base_model = (
-            AutoModelForCausalLM.from_pretrained(
-                DEEPSEEK_BASE,
-                torch_dtype=TORCH_DTYPE,
-                device_map="auto",
-                trust_remote_code=True,
-            )
+            tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.padding_side = "left"
+        base_model = AutoModelForCausalLM.from_pretrained(
+            DEEPSEEK_BASE_MODEL,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            trust_remote_code=True,
         )
-
-        # Match original DeepSeek PEFT loading.
         model = PeftModel.from_pretrained(
             base_model,
             checkpoint,
         )
-
-    # ---------------------------------------------------------
-    # Full Model
-    # ---------------------------------------------------------
-
+# ------------------------------------------------------------
     else:
-
-        model = AutoModelForCausalLM.from_pretrained(
-            checkpoint,
-            torch_dtype=TORCH_DTYPE,
-            device_map="auto",
-            low_cpu_mem_usage=True,
-        )
-
         tokenizer = AutoTokenizer.from_pretrained(
             checkpoint,
             use_fast=True,
+            trust_remote_code=True,
         )
-
         if tokenizer.pad_token is None:
-
-            tokenizer.pad_token = (
-                tokenizer.eos_token
-            )
-
+            tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.padding_side = "left"
+        model = AutoModelForCausalLM.from_pretrained(
+            checkpoint,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            low_cpu_mem_usage=True,
+            trust_remote_code=True,
+        )
     model.eval()
-
     return (
         model,
         tokenizer,
         checkpoint,
     )
-
-
-# -----------------------------------------------------------------------------
-# Public model loading function used by app.py
-# -----------------------------------------------------------------------------
-
-def load_model(
-    language,
-    task,
-    version,
-    model_type,
-    model_family,
-):
-    """
-    Load exactly the configuration selected in app.py.
-    """
-
+# ------------------------------------------------------------
+def load_model(language, task, version, model_type, model_family="Mistral"):
     global MODEL
     global TOKENIZER
-
-    global LOADED_MODEL_FAMILY
-    global LOADED_LANGUAGE
-    global LOADED_TASK
-    global LOADED_VERSION
-    global LOADED_MODEL_TYPE
-    global LOADED_CHECKPOINT
-
+    global MODEL_INFO
     with MODEL_LOCK:
-
-        # Unload previous model first.
-        _unload_model_internal()
-
-        # -----------------------------------------------------
-        # Mistral
-        # -----------------------------------------------------
-
+        unload_model()
         if model_family == "Mistral":
-
-            if language == "Mamba":
-
-                task = "Flaws + Refactoring"
-
-            elif (
-                language == "Python"
-                and task == "Refactoring"
-            ):
-
-                version = 1
-
             (
                 model,
                 tokenizer,
@@ -554,182 +172,152 @@ def load_model(
                 version=version,
                 model_type=model_type,
             )
-
-        # -----------------------------------------------------
-        # DeepSeek
-        # -----------------------------------------------------
-
         elif model_family == "DeepSeek":
-
-            # DeepSeek always version 1.
-            version = 1
-
-            # DeepSeek always Flaws + Refactoring.
-            task = "Flaws + Refactoring"
-
             (
                 model,
                 tokenizer,
                 checkpoint,
             ) = _load_deepseek(
                 language=language,
+                version=version,
                 model_type=model_type,
             )
-
         else:
-
             raise ValueError(
                 f"Unsupported model family: {model_family}"
             )
-
         MODEL = model
         TOKENIZER = tokenizer
-
-        LOADED_MODEL_FAMILY = model_family
-        LOADED_LANGUAGE = language
-        LOADED_TASK = task
-        LOADED_VERSION = version
-        LOADED_MODEL_TYPE = model_type
-        LOADED_CHECKPOINT = checkpoint
-
-        return {
-            "model_family":
-            LOADED_MODEL_FAMILY,
-
-            "language":
-            LOADED_LANGUAGE,
-
-            "task":
-            LOADED_TASK,
-
-            "version":
-            LOADED_VERSION,
-
-            "model_type":
-            LOADED_MODEL_TYPE,
-
-            "checkpoint":
-            LOADED_CHECKPOINT,
+        MODEL_INFO = {
+            "model_family": model_family,
+            "language": language,
+            "task": task,
+            "version": int(version),
+            "model_type": model_type,
+            "checkpoint": checkpoint,
         }
-
-
-# -----------------------------------------------------------------------------
-# Internal unload
-# -----------------------------------------------------------------------------
-
-def _unload_model_internal():
-
+        return MODEL_INFO.copy()
+# ------------------------------------------------------------
+def unload_model():
     global MODEL
     global TOKENIZER
-
-    global LOADED_MODEL_FAMILY
-    global LOADED_LANGUAGE
-    global LOADED_TASK
-    global LOADED_VERSION
-    global LOADED_MODEL_TYPE
-    global LOADED_CHECKPOINT
-
+    global MODEL_INFO
     MODEL = None
     TOKENIZER = None
-
-    LOADED_MODEL_FAMILY = None
-    LOADED_LANGUAGE = None
-    LOADED_TASK = None
-    LOADED_VERSION = None
-    LOADED_MODEL_TYPE = None
-    LOADED_CHECKPOINT = None
-
+    MODEL_INFO = None
+    gc.collect()
     if torch.cuda.is_available():
-
         torch.cuda.empty_cache()
-
-
-# -----------------------------------------------------------------------------
-# Public unload
-# -----------------------------------------------------------------------------
-
-def unload_model():
-
-    with MODEL_LOCK:
-
-        _unload_model_internal()
-
-
-# -----------------------------------------------------------------------------
-# Model state
-# -----------------------------------------------------------------------------
-
+        try:
+            torch.cuda.ipc_collect()
+        except Exception:
+            pass
+# ------------------------------------------------------------
 def is_model_loaded():
-
-    return (
-        MODEL is not None
-        and TOKENIZER is not None
-    )
-
-
+    return MODEL is not None
+# ------------------------------------------------------------
 def get_loaded_model_info():
-
-    if not is_model_loaded():
-
+    if MODEL_INFO is None:
         return None
-
-    return {
-        "model_family":
-        LOADED_MODEL_FAMILY,
-
-        "language":
-        LOADED_LANGUAGE,
-
-        "task":
-        LOADED_TASK,
-
-        "version":
-        LOADED_VERSION,
-
-        "model_type":
-        LOADED_MODEL_TYPE,
-
-        "checkpoint":
-        LOADED_CHECKPOINT,
-    }
-
-
-# -----------------------------------------------------------------------------
-# Mistral inference
-# -----------------------------------------------------------------------------
-
-def _generate_mistral_output(
-    prompt,
-):
-    """
-    Original Mistral inference mechanism.
-
-    Important:
-      - max_new_tokens = 32768
-      - do_sample = False
-      - top_p = 1.0
-      - complete sequence is decoded
-      - split at "Response:"
-    """
-
-    # Match original Mistral inference.
+    return MODEL_INFO.copy()
+# ------------------------------------------------------------
+def _mistral_instruction(language, task):
+    if language == "Mamba":
+        return (
+            "Analyze the following Mamba code, detect any flaws, "
+            "with a short explanation, and give one or more "
+            "corrected versions of the code. Ensure that none "
+            "of the refactored options repeat or reproduce the "
+            "original code; only the improved version should be shown:"
+        )
+    return (
+        "Analyze the following Python code, identify any flaws, "
+        "with a short explanation, and give one or more "
+        "corrected versions of the code, including a brief "
+        "explanation of each correction approach:"
+    )
+# ------------------------------------------------------------
+def _generate_mistral_prompt(language, task, content):
+    instruction = _mistral_instruction(
+        language=language,
+        task=task,
+    )
+    return (
+        "Below is an instruction that describes a task, paired "
+        "with an input that provides further context. Write a "
+        "response that appropriately solves the following Task:\n\n"
+        "### Instruction:\n"
+        f"{instruction}\n\n"
+        "### Code:\n"
+        f"{content}\n"
+        "### Response:"
+    )
+# ------------------------------------------------------------
+def _deepseek_instruction(language):
+    if language == "Python":
+        return (
+            "Analyze the following Python code, detect any flaws, "
+            "with a short explanation, and give one or more "
+            "corrected versions of the code. Ensure that none "
+            "of the refactored options repeat or reproduce the "
+            "original code; only the improved version should be shown."
+        )
+    return (
+        "Analyze the following Mamba code, detect any flaws, "
+        "with a short explanation, and give one or more "
+        "corrected versions of the code. Ensure that none "
+        "of the refactored options repeat or reproduce the "
+        "original code; only the improved version should be shown."
+    )
+# ------------------------------------------------------------
+def _generate_deepseek_prompt(language, content):
+    instruction = _deepseek_instruction(
+        language=language,
+    )
+    return (
+        "You are an AI programming assistant, utilizing the "
+        "DeepSeek Coder model.\n"
+        "### Instruction:\n"
+        f"{instruction}\n\n"
+        "### Input:\n"
+        f"{content}\n\n"
+        "### Response:"
+    )
+# ------------------------------------------------------------
+def generate_prompt(language, task, content, model_family="Mistral"):
+    if model_family == "DeepSeek":
+        return _generate_deepseek_prompt(
+            language=language,
+            content=content,
+        )
+    return _generate_mistral_prompt(
+        language=language,
+        task=task,
+        content=content,
+    )
+# ------------------------------------------------------------
+def _generate_mistral_inference(content, return_metrics=False):
+    if MODEL is None or TOKENIZER is None:
+        raise RuntimeError(
+            "No model is loaded."
+        )
+    start_time = time.time()
+    language = MODEL_INFO["language"]
+    task = MODEL_INFO["task"]
     TOKENIZER.pad_token = TOKENIZER.unk_token
-
+    prompt = _generate_mistral_prompt(
+        language=language,
+        task=task,
+        content=content,
+    )
     inputs = TOKENIZER(
         prompt,
         return_tensors="pt",
-    ).to(DEVICE)
-
-    input_tokens = (
-        inputs["input_ids"].shape[1]
-    )
-
-    if torch.cuda.is_available():
-
-        torch.cuda.empty_cache()
-
+    ).to("cuda:0")
+    input_tokens = inputs["input_ids"].shape[1]
+    torch.cuda.empty_cache()
+    outputs = None
     with torch.inference_mode():
-
         outputs = MODEL.generate(
             **inputs,
             max_new_tokens=32768,
@@ -738,71 +326,62 @@ def _generate_mistral_output(
             pad_token_id=TOKENIZER.eos_token_id,
             top_p=1.0,
         )
-
-        # IMPORTANT:
-        # Decode the complete generated sequence.
         output_p = TOKENIZER.batch_decode(
             outputs,
             skip_special_tokens=True,
         )
-
-    if output_p:
-
-        output_text = output_p[0]
-
-        split_text = output_text.split(
-            "Response:"
-        )
-
-        if len(split_text) > 1:
-
-            return (
-                split_text[1].strip(),
-                input_tokens,
+        if output_p:
+            output_text = output_p[0]
+            split_text = output_text.split(
+                "Response:"
             )
-
-        return (
-            None,
-            input_tokens,
+            if len(split_text) > 1:
+                raw_output = split_text[1].strip()
+            else:
+                raw_output = None
+        else:
+            raw_output = None
+    inference_time = time.time() - start_time
+    if outputs is not None:
+        generated_tokens = max(
+            0,
+            outputs.shape[1] - input_tokens,
         )
-
-    return (
-        None,
-        0,
+    else:
+        generated_tokens = 0
+# ------------------------------------------------------------
+    result = (
+        raw_output,
+        input_tokens,
+        generated_tokens,
+        inference_time,
     )
-
-
-# -----------------------------------------------------------------------------
-# DeepSeek inference
-# -----------------------------------------------------------------------------
-
-def _generate_deepseek_output(
-    prompt,
-):
-    """
-    Original DeepSeek inference mechanism, with max_new_tokens=32768
-    as requested.
-
-    Important:
-      - max_new_tokens = 32768
-      - do_sample = False
-      - num_beams = 1
-      - top_p = 1.0
-      - repetition_penalty = 1.1
-      - only generated tokens are decoded
-    """
-
+# ------------------------------------------------------------
+    del inputs
+    if outputs is not None:
+        del outputs
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    return result
+# ------------------------------------------------------------
+def _generate_deepseek_inference(content, return_metrics=False):
+    if MODEL is None or TOKENIZER is None:
+        raise RuntimeError(
+            "No model is loaded."
+        )
+    start_time = time.time()
+    language = MODEL_INFO["language"]
+    prompt = _generate_deepseek_prompt(
+        language=language,
+        content=content,
+    )
     inputs = TOKENIZER(
         prompt,
         return_tensors="pt",
-    ).to(DEVICE)
-
-    input_tokens = (
-        inputs["input_ids"].shape[1]
-    )
-
+    ).to("cuda:0")
+    input_tokens = inputs["input_ids"].shape[1]
     with torch.no_grad():
-
         outputs = MODEL.generate(
             **inputs,
             max_new_tokens=32768,
@@ -814,409 +393,249 @@ def _generate_deepseek_output(
             pad_token_id=TOKENIZER.pad_token_id,
             eos_token_id=TOKENIZER.eos_token_id,
         )
-
-    # IMPORTANT:
-    # Decode only generated tokens.
     response = TOKENIZER.decode(
-        outputs[0][
-            inputs["input_ids"].shape[1]:
-        ],
+        outputs[0][inputs["input_ids"].shape[1]:],
         skip_special_tokens=True,
     )
-
-    return (
+    inference_time = time.time() - start_time
+    generated_tokens = max(0, outputs.shape[1] - input_tokens)
+# ------------------------------------------------------------
+    result = (
         response,
         input_tokens,
+        generated_tokens,
+        inference_time,
     )
-
-
-# -----------------------------------------------------------------------------
-# Public inference function used by app.py
-# -----------------------------------------------------------------------------
-
-def generate_inference_output(
-    prompt,
-):
-    """
-    Generate the raw response using the currently loaded model.
-
-    app.py passes the already-created prompt here.
-    """
-
-    if not is_model_loaded():
-
-        raise RuntimeError(
-            "No model is loaded."
-        )
-
-    if LOADED_MODEL_FAMILY == "Mistral":
-
-        raw_output, _ = (
-            _generate_mistral_output(
-                prompt
+# ------------------------------------------------------------
+    del inputs
+    del outputs
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    return result
+# ------------------------------------------------------------
+def generate_inference_output(content, return_metrics=False):
+    with INFERENCE_LOCK:
+        if MODEL is None:
+            raise RuntimeError(
+                "No model is loaded."
             )
-        )
-
-        return raw_output
-
-    if LOADED_MODEL_FAMILY == "DeepSeek":
-
-        raw_output, _ = (
-            _generate_deepseek_output(
-                prompt
+        if MODEL_INFO is None:
+            raise RuntimeError(
+                "Model information is unavailable."
             )
+        if MODEL_INFO["model_family"] == "DeepSeek":
+            return _generate_deepseek_inference(
+                content=content,
+                return_metrics=return_metrics,
+            )
+        return _generate_mistral_inference(
+            content=content,
+            return_metrics=return_metrics,
         )
-
-        return raw_output
-
-    raise RuntimeError(
-        f"Unsupported loaded model family: "
-        f"{LOADED_MODEL_FAMILY}"
-    )
-
-
-# -----------------------------------------------------------------------------
-# Mistral dictionary extraction
-# -----------------------------------------------------------------------------
-
-def _extract_clean_dict(text):
-
+# ------------------------------------------------------------
+def _extract_mistral_dict(text):
     text = str(text)
-
     if "### Response:" in text:
-
-        text = (
-            text
-            .split("### Response:")[-1]
-            .strip()
-        )
-
+        text = text.split(
+            "### Response:"
+        )[-1].strip()
     else:
-
         text = text.strip()
-
     match = re.search(
         r"(\{'Flaws'[\s\S]*\})",
         text,
     )
-
     if not match:
-
         raise ValueError(
             "No dict found"
         )
-
     candidate = match.group(1)
-
-    candidate = candidate.replace(
-        "\n",
-        "\\n",
-    )
-
-    return ast.literal_eval(
-        candidate
-    )
-
-
-# -----------------------------------------------------------------------------
-# DeepSeek cleaning
-# -----------------------------------------------------------------------------
-
+    return ast.literal_eval(candidate)
+# ------------------------------------------------------------
 def _clean_deepseek_text(text):
-
-    if not text:
-
-        return ""
-
     text = str(text)
-
     text = text.split("###")[0]
-
     return text
-
-
-# -----------------------------------------------------------------------------
-# Mistral output formatting
-# -----------------------------------------------------------------------------
-
-def _format_mistral_output(
-    raw_output,
-):
-    """
-    Preserve the original Mistral output handling.
-    """
-
-    if raw_output is None:
-
-        return "INVALID OUTPUT"
-
-    output_dict = _extract_clean_dict(
-        raw_output
+# ------------------------------------------------------------
+def _extract_deepseek_dict(text):
+    if not text:
+        raise ValueError(
+            "Empty DeepSeek output"
+        )
+    text = _clean_deepseek_text(
+        text
     )
-
-    result = "Flaws:\n"
-
-    # ---------------------------------------------------------
-    # Flaws
-    # ---------------------------------------------------------
-
-    for entry in output_dict["Flaws"]:
-
-        result += (
-            f"   - {entry['Flaw']}: "
-            f"{entry['Explanation']}\n"
+    flaws = re.findall(
+        r'"Flaw"\s*:\s*"([^"]+)"',
+        text,
+    )
+    explanations = re.findall(
+        r'"Explanation"\s*:\s*"([^"]+)"',
+        text,
+    )
+    result = {
+        "Flaws": [],
+        "Refactored Versions": "",
+    }
+    for i in range(min(len(flaws), len(explanations))):
+        result["Flaws"].append(
+            {
+                "Flaw": flaws[i],
+                "Explanation": explanations[i],
+            }
         )
-
-    # ---------------------------------------------------------
-    # Python Flaw Detection
-    # ---------------------------------------------------------
-
-    if (
-        LOADED_LANGUAGE == "Python"
-        and LOADED_TASK == "Flaw Detection"
-    ):
-
-        result += (
-            "\nCorrected code recommendation:\n\n"
+    refactored = re.search(
+        r'"Refactored Versions"\s*:\s*"([\s\S]+)"',
+        text,
+    )
+    if refactored:
+        cleaned_code = refactored.group(1)
+        cleaned_code = cleaned_code.replace(
+            '\\"',
+            '"',
         )
-
-        corrections = output_dict.get(
-            "Corrections"
+        cleaned_code = cleaned_code.replace(
+            "\\n",
+            "\n",
         )
-
-        if (
-            isinstance(corrections, list)
-            and corrections
-        ):
-
-            for item in corrections:
-
-                # Same behavior as the original:
-                # explanation is not written.
-                code = item.get(
-                    "Correction",
-                    "",
-                )
-
-                result += (
-                    code
-                    + "\n\n"
-                )
-
-        elif "Correction" in output_dict:
-
-            result += str(
-                output_dict["Correction"]
-            )
-
-    # ---------------------------------------------------------
-    # Python Refactoring
-    # ---------------------------------------------------------
-
-    elif (
-        LOADED_LANGUAGE == "Python"
-        and LOADED_TASK == "Refactoring"
-    ):
-
-        result += (
-            "\nRefactored versions code:\n\n"
+        result["Refactored Versions"] = (
+            cleaned_code
         )
-
-        # IMPORTANT:
-        # Directly use the original dictionary field.
-        if "Refactored Versions" in output_dict:
-
-            result += str(
-                output_dict[
-                    "Refactored Versions"
-                ]
-            )
-
-        else:
-
-            result += "INVALID OUTPUT"
-
-    # ---------------------------------------------------------
-    # Mamba
-    # ---------------------------------------------------------
-
-    elif LOADED_LANGUAGE == "Mamba":
-
-        result += (
-            "\nRefactored versions code:\n\n"
+    elif not result["Flaws"]:
+        raise ValueError(
+            "Invalid DeepSeek output"
         )
-
-        # IMPORTANT:
-        # Directly use the original dictionary field.
-        if "Refactored Versions" in output_dict:
-
-            result += str(
-                output_dict[
-                    "Refactored Versions"
-                ]
-            )
-
-        else:
-
-            result += "INVALID OUTPUT"
-
-    else:
-
-        result += (
-            "\nRefactored versions code:\n\n"
-        )
-
-        if "Refactored Versions" in output_dict:
-
-            result += str(
-                output_dict[
-                    "Refactored Versions"
-                ]
-            )
-
-        else:
-
-            result += "INVALID OUTPUT"
-
-    result += "\n\n"
-
     return result
-
-
-# -----------------------------------------------------------------------------
-# DeepSeek output formatting
-# -----------------------------------------------------------------------------
-
-def _format_deepseek_output(
-    raw_output,
-):
-    """
-    Preserve the original DeepSeek PrintResult behavior.
-    """
-
-    result = "Flaws:\n"
-
-    if not raw_output:
-
-        result += (
-            "INVALID OUTPUT\n\n"
-        )
-
-        return result
-
-    try:
-
-        text = _clean_deepseek_text(
-            str(raw_output)
-        )
-
-        flaws = re.findall(
-            r'"Flaw"\s*:\s*"([^"]+)"',
-            text,
-        )
-
-        explanations = re.findall(
-            r'"Explanation"\s*:\s*"([^"]+)"',
-            text,
-        )
-
-        for i in range(
-            min(
-                len(flaws),
-                len(explanations),
-            )
-        ):
-
-            # Preserve original DeepSeek spacing.
-            result += (
-                f"   - {flaws[i]} : "
-                f"{explanations[i]}\n"
-            )
-
-        result += (
-            "\nRefactored versions code:\n\n"
-        )
-
-        refactored = re.search(
-            r'"Refactored Versions"\s*:\s*"([\s\S]+)"',
-            text,
-        )
-
-        if refactored:
-
-            cleaned_code = (
-                refactored.group(1)
-            )
-
-            cleaned_code = (
-                cleaned_code.replace(
-                    '\\"',
-                    '"',
-                )
-            )
-
-            cleaned_code = (
-                cleaned_code.replace(
-                    "\\n",
-                    "\n",
-                )
-            )
-
-            result += cleaned_code
-
-        else:
-
-            result += "INVALID OUTPUT"
-
-        result += "\n\n"
-
-    except Exception:
-
-        result += (
-            "INVALID OUTPUT\n\n"
-        )
-
-    return result
-
-
-# -----------------------------------------------------------------------------
-# Public formatting function used by app.py
-# -----------------------------------------------------------------------------
-
-def format_output(
-    raw_output,
-):
-    """
-    Format the raw output according to the loaded model.
-    """
-
-    if not is_model_loaded():
-
+# ------------------------------------------------------------
+def extract_clean_dict(text):
+    if MODEL_INFO is None:
         raise RuntimeError(
-            "No model is loaded."
+            "No model information is available."
         )
-
-    if LOADED_MODEL_FAMILY == "Mistral":
-
-        return _format_mistral_output(
-            raw_output
-        )
-
-    if LOADED_MODEL_FAMILY == "DeepSeek":
-
-        return _format_deepseek_output(
-            raw_output
-        )
-
-    raise RuntimeError(
-        f"Unsupported model family: "
-        f"{LOADED_MODEL_FAMILY}"
+    if MODEL_INFO["model_family"] == "DeepSeek":
+        return _extract_deepseek_dict(text)
+    return _extract_mistral_dict(text)
+# ------------------------------------------------------------
+def ExtractCleanDict(text):
+    return extract_clean_dict(text)
+# ------------------------------------------------------------
+def CleanText(text):
+    return _clean_deepseek_text(text)
+# ------------------------------------------------------------
+def format_output(output_dict):
+    if MODEL_INFO is None:
+        raise RuntimeError("No model information is available.")
+    output_lines = []
+    output_lines.append("Flaws:")
+    flaws = output_dict.get("Flaws", [])
+    for entry in flaws:
+        if isinstance(entry, dict):
+            flaw = entry.get("Flaw", "")
+            explanation = entry.get("Explanation", "")
+            output_lines.append(
+                f"   - {flaw}: {explanation}"
+            )
+        else:
+            output_lines.append(
+                f"   - {entry}"
+            )
+    if (
+        MODEL_INFO["model_family"] == "Mistral"
+        and MODEL_INFO["language"] == "Python"
+        and MODEL_INFO["task"] == "Flaw Detection"
+    ):
+        output_lines.append("")
+        output_lines.append("Corrected code recommendation:")
+        output_lines.append("")
+        corrections = output_dict.get("Corrections")
+        if isinstance(corrections, list) and corrections:
+            for item in corrections:
+                if isinstance(item, dict):
+                    code = item.get(
+                        "Correction",
+                        ""
+                    )
+                    if code:
+                        output_lines.append(str(code))
+                        output_lines.append("")
+                elif item:
+                    output_lines.append(str(item))
+                    output_lines.append("")
+        elif "Correction" in output_dict:
+            correction = output_dict.get("Correction", "")
+            if correction:
+                output_lines.append(str(correction))
+    else:
+        output_lines.append("")
+        output_lines.append("Refactored versions code:")
+        output_lines.append("")
+        refactored = output_dict.get("Refactored Versions", "")
+        if isinstance(refactored, str):
+            output_lines.append(refactored)
+        elif isinstance(refactored, list):
+            for item in refactored:
+                if isinstance(item, dict):
+                    code = item.get(
+                        "Code",
+                        item.get(
+                            "Refactored Code",
+                            item.get(
+                                "Refactored",
+                                ""
+                            )
+                        )
+                    )
+                    if code:
+                        output_lines.append(str(code))
+                elif item:
+                    output_lines.append(str(item))
+                output_lines.append("")
+        elif refactored:
+            output_lines.append(str(refactored))
+    return "\n".join(output_lines)
+# ------------------------------------------------------------
+def _format_time(seconds):
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    remaining_seconds = (seconds % 60)
+    result = ""
+    if hours > 0:
+        result += (f"{hours}h ")
+    if (minutes > 0 or hours > 0):
+        result += (f"{minutes}m ")
+    result += (f"{remaining_seconds:.6f}s")
+    return result
+# ------------------------------------------------------------
+def append_inference_metrics(final_output, language, task, model_type, model_version, input_tokens, generated_tokens, inference_time):
+    if input_tokens > 0:
+        time_per_input_token = (inference_time / input_tokens)
+    else:
+        time_per_input_token = 0.0
+    if generated_tokens > 0:
+        time_per_generated_token = (inference_time / generated_tokens)
+    else:
+        time_per_generated_token = 0.0
+    metrics = (
+        "\n\n===========================================\n"
+        "Inference Metrics\n"
+        "===========================================\n"
+        f"Language:                  {language}\n"
+        f"Task:                      {task}\n"
+        f"Model type:                {model_type}\n"
+        f"Model version:             {model_version}\n"
+        f"Input tokens:              {input_tokens}\n"
+        f"Generated tokens:          {generated_tokens}\n"
+        f"Inference time:            "
+        f"{_format_time(inference_time)}\n"
+        f"Time per input token:      "
+        f"{_format_time(time_per_input_token)}\n"
+        f"Time per generated token:  "
+        f"{_format_time(time_per_generated_token)}\n"
+        "===========================================\n"
     )
-
-
-# -----------------------------------------------------------------------------
-# Compatibility aliases
-# -----------------------------------------------------------------------------
-
-load_selected_model = load_model
-
+    return (
+        final_output
+        + metrics
+    )
+# ------------------------------------------------------------
