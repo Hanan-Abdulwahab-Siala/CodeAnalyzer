@@ -7,7 +7,7 @@ The project provides:
 - A command-line analyzer
 - A Gradio web interface
 - LoRA adapter and full-model options
-- Automatic GPU/CPU hardware detection
+- Automatic GPU hardware detection
 - Optional KCL CREATE HPC scripts for the project author's GPU workflow
 
 ---
@@ -71,7 +71,7 @@ cd Code-Analyzer
 Create a virtual environment:
 
 ```bash
-python -m venv .venv
+python3 -m venv ~/venvs
 ```
 
 Activate the virtual environment.
@@ -79,13 +79,14 @@ Activate the virtual environment.
 **Linux / macOS**
 
 ```bash
-source .venv/bin/activate
+source ~/venvs/bin/activate
+
 ```
 
 **Windows**
 
 ```bash
-. .venv\Scripts\activate
+. ~/venvs/bin/activate
 ```
 
 Upgrade pip:
@@ -137,12 +138,6 @@ For example:
         "def corrected_function():\n    pass"
     ]
 }
-```
-
-The actual response depends on the model and the submitted code. The project includes a function for extracting the dictionary from the model output:
-
-```python
-extract_clean_dict()
 ```
 
 ## Formatting Output
