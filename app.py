@@ -1,47 +1,23 @@
 import os
-
 import gradio as gr
-
 from model_service import (
     load_model,
     unload_model,
-    generate_prompt,
     generate_inference_output,
+    extract_clean_dict,
     format_output,
+    append_inference_metrics,
     is_model_loaded,
     get_loaded_model_info,
 )
-
-
-# ============================================================
-# Constants
-# ============================================================
-
-MODEL_FAMILIES = [
-    "Mistral",
-    "DeepSeek",
-]
-
-LANGUAGES = [
-    "Mamba",
-    "Python",
-]
-
-MODEL_TYPES = [
-    "LoRA Adapter",
-    "Full Model",
-]
-
-
-# ============================================================
-# UI helpers
-# ============================================================
-
+# ------------------------------------------------------------
+MODEL_FAMILIES = ["Mistral", "DeepSeek"]
+LANGUAGES = ["Mamba", "Python"]
+MODEL_TYPES = ["LoRA Adapter", "Full Model"]
+# ------------------------------------------------------------
 def _loaded_model_text(info):
-
     if not info:
         return "No model loaded."
-
     return (
         f"Model: {info['model_family']}\n"
         f"Language: {info['language']}\n"
@@ -50,50 +26,29 @@ def _loaded_model_text(info):
         f"Model Type: {info['model_type']}\n"
         f"Checkpoint: {info['checkpoint']}"
     )
-
-
-# ============================================================
-# Configuration helpers
-# ============================================================
-
-def _configuration_values(
-    model_family,
-    language,
-    task,
-    model_version,
-):
-
+# ------------------------------------------------------------
+def _configuration_values(model_family, language, task, model_version):
     if model_family == "DeepSeek":
-
         task_update = gr.update(
             choices=["Flaws + Refactoring"],
             value="Flaws + Refactoring",
             interactive=False,
         )
-
         version_update = gr.update(
             choices=["1"],
             value="1",
             interactive=False,
         )
-
         return (
             task_update,
             version_update,
         )
-
-    # --------------------------------------------------------
-    # Mistral / Mamba
-    # --------------------------------------------------------
-
     if language == "Mamba":
-
         task_update = gr.update(
             choices=["Flaws + Refactoring"],
             value="Flaws + Refactoring",
             interactive=False,
         )
-
         version_update = gr.update(
             choices=["1", "2"],
             value=(
@@ -103,37 +58,27 @@ def _configuration_values(
             ),
             interactive=True,
         )
-
         return (
             task_update,
             version_update,
         )
-
-    # --------------------------------------------------------
-    # Mistral / Python
-    # --------------------------------------------------------
-
+# ------------------------------------------------------------
     task_choices = [
         "Flaw Detection",
         "Refactoring",
     ]
-
     selected_task = (
         task
         if task in task_choices
         else "Flaw Detection"
     )
-
     if selected_task == "Refactoring":
-
         version_update = gr.update(
             choices=["1"],
             value="1",
             interactive=False,
         )
-
     else:
-
         version_update = gr.update(
             choices=["1", "2"],
             value=(
@@ -143,40 +88,24 @@ def _configuration_values(
             ),
             interactive=True,
         )
-
     task_update = gr.update(
         choices=task_choices,
         value=selected_task,
         interactive=True,
     )
-
     return (
         task_update,
         version_update,
     )
-
-
-# ============================================================
-# Configuration changed
-# ============================================================
-
-def configuration_changed(
-    model_family,
-    language,
-    task,
-    model_version,
-    model_type,
-):
-
+# ------------------------------------------------------------
+def configuration_changed(model_family, language, task, model_version, model_type):
     unload_model()
-
     task_update, version_update = _configuration_values(
         model_family=model_family,
         language=language,
         task=task,
         model_version=model_version,
     )
-
     return (
         task_update,
         version_update,
@@ -185,20 +114,8 @@ def configuration_changed(
         "",
         "No model loaded.",
     )
-
-
-# ============================================================
-# Model family changed
-# ============================================================
-
-def model_family_changed(
-    model_family,
-    language,
-    task,
-    model_version,
-    model_type,
-):
-
+# ------------------------------------------------------------
+def model_family_changed(model_family, language, task, model_version, model_type):
     return configuration_changed(
         model_family=model_family,
         language=language,
@@ -206,20 +123,8 @@ def model_family_changed(
         model_version=model_version,
         model_type=model_type,
     )
-
-
-# ============================================================
-# Language changed
-# ============================================================
-
-def language_changed(
-    model_family,
-    language,
-    task,
-    model_version,
-    model_type,
-):
-
+# ------------------------------------------------------------
+def language_changed(model_family, language, task, model_version, model_type):
     return configuration_changed(
         model_family=model_family,
         language=language,
@@ -227,44 +132,26 @@ def language_changed(
         model_version=model_version,
         model_type=model_type,
     )
-
-
-# ============================================================
-# Task changed
-# ============================================================
-
-def task_changed(
-    model_family,
-    language,
-    task,
-    model_version,
-    model_type,
-):
-
+# ------------------------------------------------------------
+def task_changed(model_family, language, task, model_version, model_type):
     unload_model()
-
     if model_family == "DeepSeek":
-
         version_update = gr.update(
             choices=["1"],
             value="1",
             interactive=False,
         )
-
     elif (
         model_family == "Mistral"
         and language == "Python"
         and task == "Refactoring"
     ):
-
         version_update = gr.update(
             choices=["1"],
             value="1",
             interactive=False,
         )
-
     else:
-
         version_update = gr.update(
             choices=["1", "2"],
             value=(
@@ -274,7 +161,6 @@ def task_changed(
             ),
             interactive=True,
         )
-
     return (
         version_update,
         "",
@@ -282,87 +168,37 @@ def task_changed(
         "",
         "No model loaded.",
     )
-
-
-# ============================================================
-# Version changed
-# ============================================================
-
-def version_changed(
-    model_family,
-    language,
-    task,
-    model_version,
-    model_type,
-):
-
+# ------------------------------------------------------------
+def version_changed(model_family, language, task, model_version, model_type):
     unload_model()
-
     return (
         "",
         None,
         "",
         "No model loaded.",
     )
-
-
-# ============================================================
-# Model type changed
-# ============================================================
-
-def model_type_changed(
-    model_family,
-    language,
-    task,
-    model_version,
-    model_type,
-):
-
+# ------------------------------------------------------------
+def model_type_changed(model_family, language, task, model_version, model_type):
     unload_model()
-
     return (
         "",
         None,
         "",
         "No model loaded.",
     )
-
-
-# ============================================================
-# Load selected model
-# ============================================================
-
-def load_selected_model(
-    model_family,
-    language,
-    task,
-    model_version,
-    model_type,
-):
-
+# ------------------------------------------------------------
+def load_selected_model(model_family, language, task, model_version, model_type):
     try:
-
-        # ----------------------------------------------------
-        # Normalize configuration exactly according to the UI
-        # rules.
-        # ----------------------------------------------------
-
         if model_family == "DeepSeek":
-
             task = "Flaws + Refactoring"
             model_version = 1
-
         elif language == "Mamba":
-
             task = "Flaws + Refactoring"
-
         elif (
             language == "Python"
             and task == "Refactoring"
         ):
-
             model_version = 1
-
         info = load_model(
             language=language,
             task=task,
@@ -370,24 +206,17 @@ def load_selected_model(
             model_type=model_type,
             model_family=model_family,
         )
-
         status = (
             "Model loaded successfully.\n\n"
             + _loaded_model_text(info)
         )
-
-        # Loading a model clears the old program/file/output,
-        # but the newly loaded model remains loaded.
-
         return (
             status,
             "",
             None,
             "",
         )
-
     except Exception as exc:
-
         return (
             "ERROR: Could not load model.\n\n"
             f"{type(exc).__name__}: {exc}",
@@ -395,64 +224,28 @@ def load_selected_model(
             None,
             "",
         )
-
-
-# ============================================================
-# Program file loading
-# ============================================================
-
+# ------------------------------------------------------------
 def load_program_file(file_path):
-
     if not file_path:
         return ""
-
     try:
-
-        with open(
-            file_path,
-            "r",
-            encoding="utf-8",
-        ) as file:
-
+        with open(file_path, "r", encoding="utf-8") as file:
             return file.read()
-
     except Exception:
-
         return ""
-
-
-# ============================================================
-# Analyze code
-# ============================================================
-
-def analyze_code(
-    code,
-    language,
-    task,
-):
-
+# ------------------------------------------------------------
+def analyze_code(code, language, task):
     if not is_model_loaded():
-
         return (
             "ERROR: No model is loaded.\n"
             "Please select the model configuration "
             "and press Load Model first."
         )
-
     if not code or not code.strip():
-
         return "Please enter or load code first."
-
     try:
-
         info = get_loaded_model_info()
-
-        # ----------------------------------------------------
-        # Language must match loaded model.
-        # ----------------------------------------------------
-
         if info["language"] != language:
-
             return (
                 "ERROR: The selected language does not "
                 "match the loaded model.\n\n"
@@ -460,21 +253,11 @@ def analyze_code(
                 f"Selected language: {language}\n\n"
                 "Please press Load Model."
             )
-
-        # ----------------------------------------------------
-        # Mistral Python task must match.
-        #
-        # Mamba and DeepSeek use fixed task:
-        # Flaws + Refactoring.
-        # ----------------------------------------------------
-
         if info["model_family"] == "Mistral":
-
             if (
                 language == "Python"
                 and info["task"] != task
             ):
-
                 return (
                     "ERROR: The selected task does not "
                     "match the loaded model.\n\n"
@@ -482,120 +265,67 @@ def analyze_code(
                     f"Selected task: {task}\n\n"
                     "Please press Load Model."
                 )
-
-        # ----------------------------------------------------
-        # Generate exact prompt for the selected model.
-        # ----------------------------------------------------
-
-        prompt = generate_prompt(
+        (
+            raw_output,
+            input_tokens,
+            generated_tokens,
+            inference_time,
+        ) = generate_inference_output(code, return_metrics=True)
+        if raw_output is None or not str(raw_output).strip():
+            return (
+                "ERROR: Model returned empty output."
+            )
+        output_dict = extract_clean_dict(raw_output)
+        final_output = format_output(output_dict)
+        final_output = append_inference_metrics(
+            final_output=final_output,
             language=language,
-            task=task,
-            content=code,
-            model_family=info["model_family"],
+            task=info["task"],
+            model_type=info["model_type"],
+            model_version=info["version"],
+            input_tokens=input_tokens,
+            generated_tokens=generated_tokens,
+            inference_time=inference_time,
         )
-
-        # ----------------------------------------------------
-        # Generate raw model response.
-        # ----------------------------------------------------
-
-        raw_output = generate_inference_output(
-            prompt
-        )
-
-        # ----------------------------------------------------
-        # Format response.
-        # ----------------------------------------------------
-
-        final_output = format_output(
-            raw_output
-        )
-
-        # ----------------------------------------------------
-        # Save output.
-        # ----------------------------------------------------
-
-        os.makedirs(
-            "output",
-            exist_ok=True,
-        )
-
-        with open(
-            "output/output.txt",
-            "w",
-            encoding="utf-8",
-        ) as file:
-
+        os.makedirs("output", exist_ok=True)
+        with open("output/output.txt", "w", encoding="utf-8") as file:
             file.write(final_output)
-
         return final_output
-
     except Exception as exc:
-
         return (
             "ERROR during analysis.\n\n"
             f"{type(exc).__name__}: {exc}"
         )
-
-
-# ============================================================
-# Clear program/output
-# ============================================================
-
+# ------------------------------------------------------------
 def clear_program():
-
-    # IMPORTANT:
-    # The loaded model is NOT unloaded.
-
     return (
         "",
         None,
         "",
     )
-
-
-# ============================================================
-# Gradio UI
-# ============================================================
-
-with gr.Blocks(
-    title="Unified Code Analyzer"
-) as app:
-
+# ------------------------------------------------------------
+with gr.Blocks(title="Unified Code Analyzer") as app:
     gr.Markdown(
         "# Unified Code Analyzer"
     )
-
     gr.Markdown(
         "Select the model configuration, press "
         "**Load Model**, then analyze your code."
     )
-
-    # ========================================================
-    # Model / Language
-    # ========================================================
-
     with gr.Row():
-
         model_family = gr.Dropdown(
             label="Model",
             choices=MODEL_FAMILIES,
             value="Mistral",
             scale=1,
         )
-
         language = gr.Dropdown(
             label="Language",
             choices=LANGUAGES,
             value="Mamba",
             scale=1,
         )
-
-    # ========================================================
-    # Task / Version / Model Type
-    # ========================================================
-
     with gr.Row():
-
         task = gr.Dropdown(
             label="Task",
             choices=["Flaws + Refactoring"],
@@ -603,7 +333,6 @@ with gr.Blocks(
             interactive=False,
             scale=1,
         )
-
         model_version = gr.Dropdown(
             label="Model Version",
             choices=["1", "2"],
@@ -611,25 +340,17 @@ with gr.Blocks(
             interactive=True,
             scale=1,
         )
-
         model_type = gr.Dropdown(
             label="Model Type",
             choices=MODEL_TYPES,
             value="LoRA Adapter",
             scale=1,
         )
-
-    # ========================================================
-    # Load Model
-    # ========================================================
-
     with gr.Row():
-
         load_button = gr.Button(
             "Load Model",
             variant="primary",
         )
-
     model_status = gr.Textbox(
         label="Loaded Model",
         value="No model loaded.",
@@ -637,26 +358,15 @@ with gr.Blocks(
         max_lines=8,
         interactive=False,
     )
-
-    # ========================================================
-    # Program file
-    # ========================================================
-
     program_file = gr.File(
         label="Load Program",
         file_types=[
             ".txt",
             ".py",
             ".mamba",
-            ".kcl",
         ],
         type="filepath",
     )
-
-    # ========================================================
-    # Program editor
-    # ========================================================
-
     code_input = gr.Textbox(
         label="Program",
         placeholder=(
@@ -667,38 +377,21 @@ with gr.Blocks(
         max_lines=30,
         interactive=True,
     )
-
-    # ========================================================
-    # Analyze + Clear
-    # ========================================================
-
     with gr.Row():
-
         analyze_button = gr.Button(
             "Analyze",
             variant="primary",
         )
-
         clear_button = gr.Button(
             "Clear",
             variant="secondary",
         )
-
-    # ========================================================
-    # Output
-    # ========================================================
-
     output_box = gr.Textbox(
         label="Analysis Output",
         lines=18,
         max_lines=35,
         interactive=False,
     )
-
-    # ========================================================
-    # Model family changed
-    # ========================================================
-
     model_family.change(
         fn=model_family_changed,
         inputs=[
@@ -717,11 +410,6 @@ with gr.Blocks(
             model_status,
         ],
     )
-
-    # ========================================================
-    # Language changed
-    # ========================================================
-
     language.change(
         fn=language_changed,
         inputs=[
@@ -740,11 +428,6 @@ with gr.Blocks(
             model_status,
         ],
     )
-
-    # ========================================================
-    # Task changed
-    # ========================================================
-
     task.change(
         fn=task_changed,
         inputs=[
@@ -762,11 +445,6 @@ with gr.Blocks(
             model_status,
         ],
     )
-
-    # ========================================================
-    # Version changed
-    # ========================================================
-
     model_version.change(
         fn=version_changed,
         inputs=[
@@ -783,11 +461,6 @@ with gr.Blocks(
             model_status,
         ],
     )
-
-    # ========================================================
-    # Model type changed
-    # ========================================================
-
     model_type.change(
         fn=model_type_changed,
         inputs=[
@@ -804,21 +477,11 @@ with gr.Blocks(
             model_status,
         ],
     )
-
-    # ========================================================
-    # Program file selected
-    # ========================================================
-
     program_file.change(
         fn=load_program_file,
         inputs=program_file,
         outputs=code_input,
     )
-
-    # ========================================================
-    # Load Model
-    # ========================================================
-
     load_button.click(
         fn=load_selected_model,
         inputs=[
@@ -835,11 +498,6 @@ with gr.Blocks(
             output_box,
         ],
     )
-
-    # ========================================================
-    # Analyze
-    # ========================================================
-
     analyze_button.click(
         fn=analyze_code,
         inputs=[
@@ -849,11 +507,6 @@ with gr.Blocks(
         ],
         outputs=output_box,
     )
-
-    # ========================================================
-    # Clear
-    # ========================================================
-
     clear_button.click(
         fn=clear_program,
         inputs=[],
@@ -863,23 +516,8 @@ with gr.Blocks(
             output_box,
         ],
     )
-
-
-# ============================================================
-# Application entry point
-# ============================================================
-
+# ------------------------------------------------------------
 if __name__ == "__main__":
-
-    port = int(
-        os.environ.get(
-            "GRADIO_SERVER_PORT",
-            "7860",
-        )
-    )
-
-    app.launch(
-        server_name="0.0.0.0",
-        server_port=port,
-    )
-
+    port = int(os.environ.get("GRADIO_SERVER_PORT", "7860"))
+    app.launch(server_name="0.0.0.0", server_port=port)
+# ------------------------------------------------------------
