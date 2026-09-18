@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=04:00:00
-#SBATCH --output=/scratch/users/%u/mamba-%j.out
-#SBATCH --error=/scratch/users/%u/mamba-%j.err
+#SBATCH --output=/scratch/users/%u/mambapy-%j.out
+#SBATCH --error=/scratch/users/%u/mambapy-%j.err
 
 export PYTHONNOUSERSITE=1
 
@@ -94,54 +94,119 @@ print('GPU:', torch.cuda.get_device_name(0))
 "
 
 # --------------------------------------------------
-# Run analyzer
+# Run Analyzer
 # --------------------------------------------------
 
 echo
 echo "Running inference..."
 
-# ----------------------------------------------------------------
-# MAMBA
-# Mamba has ONE combined task:
-# Flaws + Refactoring
-# ----------------------------------------------------------------
-
-python analyze.py \
-    input/sample.txt \
-    --language Mamba \
-    --model-version 2 \
-    --model-type "LoRA Adapter" \
-    --output output/output.txt
-
-# ----------------------------------------------------------------
-# For Python Flaw Detection use:
-#
-# python analyze.py \
-#     input/Test1.py \
-#     --language Python \
-#     --task "Flaw Detection" \
-#     --model-version 2 \
-#     --model-type "LoRA Adapter" \
-#     --output output/output.txt
-#
-# ----------------------------------------------------------------
-# For Python Refactoring use:
-#
-# python analyze.py \
-#     input/Test1.py \
-#     --language Python \
-#     --task "Refactoring" \
-#     --model-version 1 \
-#     --model-type "LoRA Adapter" \
-#     --output output/output.txt
-#
-# ----------------------------------------------------------------
+# --------------------------------------------------
+# Choose ONE command below starting by python and uncomment it.
+# --------------------------------------------------
 
 # --------------------------------------------------
-# Finished
+# MISTRAL - MAMBA
+# --------------------------------------------------
+
+## Mistral + Mamba + Version 1 + LoRA Adapter
+
+# python analyze.py input/sample.txt --language Mamba --model-family Mistral --model-version 1 --model-type "LoRA Adapter" 
+
+# --------------------------------------------------
+
+## Mistral + Mamba + Version 2 + LoRA Adapter
+
+python analyze.py input/sample.txt --language Mamba --model-family Mistral --model-version 2 --model-type "LoRA Adapter" 
+
+# --------------------------------------------------
+
+## Mistral + Mamba + Version 1 + Full Model
+
+# python analyze.py input/sample.txt --language Mamba --model-family Mistral --model-version 1 --model-type "Full Model" 
+
+# --------------------------------------------------
+
+## Mistral + Mamba + Version 2 + Full Model
+
+# python analyze.py input/sample.txt --language Mamba --model-family Mistral --model-version 2 --model-type "Full Model" 
+
+# --------------------------------------------------
+# MISTRAL - PYTHON FLAW DETECTION
+# --------------------------------------------------
+
+## Mistral + Python + Flaw Detection + Version 1 + LoRA Adapter
+
+# python analyze.py input/sample.py --language Python --model-family Mistral --task "Flaw Detection" --model-version 1 --model-type "LoRA Adapter" 
+
+# --------------------------------------------------
+
+## Mistral + Python + Flaw Detection + Version 2 + LoRA Adapter
+
+# python analyze.py input/sample.py --language Python --model-family Mistral --task "Flaw Detection" --model-version 2 --model-type "LoRA Adapter" 
+
+# --------------------------------------------------
+
+## Mistral + Python + Flaw Detection + Version 1 + Full Model
+
+# python analyze.py input/sample.py --language Python --model-family Mistral --task "Flaw Detection" --model-version 1 --model-type "Full Model" 
+
+# --------------------------------------------------
+
+## Mistral + Python + Flaw Detection + Version 2 + Full Model
+
+# python analyze.py input/sample.py --language Python --model-family Mistral --task "Flaw Detection" --model-version 2 --model-type "Full Model" 
+
+# --------------------------------------------------
+# MISTRAL - PYTHON REFACTORING
+# --------------------------------------------------
+
+## Mistral + Python + Refactoring + Version 1 + LoRA Adapter
+
+# python analyze.py input/sample.py --language Python --model-family Mistral --task "Refactoring" --model-version 1 --model-type "LoRA Adapter" 
+
+# --------------------------------------------------
+
+## Mistral + Python + Refactoring + Version 1 + Full Model
+
+# python analyze.py input/sample.py --language Python --model-family Mistral --task "Refactoring" --model-version 1 --model-type "Full Model" 
+
+# --------------------------------------------------
+# DEEPSEEK - MAMBA
+# --------------------------------------------------
+
+## DeepSeek + Mamba + Version 1 + LoRA Adapter
+
+# python analyze.py input/sample.txt --language Mamba --model-family DeepSeek --model-version 1 --model-type "LoRA Adapter" 
+
+# --------------------------------------------------
+
+## DeepSeek + Mamba + Version 1 + Full Model
+
+# python analyze.py input/sample.txt --language Mamba --model-family DeepSeek --model-version 1 --model-type "Full Model" 
+
+# --------------------------------------------------
+# DEEPSEEK - PYTHON
+# --------------------------------------------------
+
+## DeepSeek + Python + Version 1 + LoRA Adapter
+
+# python analyze.py input/sample.py --language Python --model-family DeepSeek --model-version 1 --model-type "LoRA Adapter" 
+
+# --------------------------------------------------
+
+## DeepSeek + Python + Version 1 + Full Model
+
+# python analyze.py input/sample.py --language Python --model-family DeepSeek --model-version 1 --model-type "Full Model" 
+
 # --------------------------------------------------
 
 echo
 echo "========================================"
 echo "Job completed successfully"
 echo "========================================"
+# --------------------------------------------------
+
+
+
+
+
