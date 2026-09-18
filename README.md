@@ -166,6 +166,7 @@ Model identifiers used by the project include:
 ### Base Model
 
 - 👉 [mistralai/Mistral-7B-v0.3](https://huggingface.co/mistralai/Mistral-7B-v0.3)
+- 👉 [deepseek-ai/deepseek-coder-6.7b-base](https://huggingface.co/deepseek-ai/deepseek-coder-6.7b-base)
 
 ### LoRA Adapter Models
 #### Mistral
