@@ -43,8 +43,27 @@ You can also check your current directory:
 pwd
 ```
 ---
+#### 3. Verify the Input File Exists
 
-#### 3. Check the SLURM Script and Make the Script Executable
+Check the input file:
+
+```bash
+ls -lh input/sample.txt
+or
+ls -lh input/sample.py
+```
+
+You can also test:
+
+```bash
+cat input/sample.txt
+or
+cat input/sample.py
+```
+
+---
+
+#### 4. Check the SLURM Script and Make the Script Executable
 
 Run:
 
@@ -71,7 +90,7 @@ You should see executable permissions, for example:
 ```
 ---
 
-#### 4. Submit the SLURM Job
+#### 5. Submit the SLURM Job
 
 Submit the script using:
 
@@ -94,7 +113,7 @@ JOBID=37143242
 Your JOBID will be different each time you submit a new job.
 
 ---
-#### 5. Open the Tunnel Automatically
+#### 6. Open the Tunnel Automatically
 
 Open **PowerShell** or **Command Prompt**.
 
@@ -113,7 +132,7 @@ where 37243372 is a JOBID
 
 ---
 
-#### 6. Open Gradio in Your Browser
+#### 7. Open Gradio in Your Browser
 
 Once the SSH tunnel is active, open Chrome, Edge, Firefox, or another browser.
 
@@ -126,7 +145,7 @@ http://localhost:7860
 The Gradio interface should appear.
 
 ---
-#### 7. Stopping the Application
+#### 8. Stopping the Application
 
 When you are finished, cancel the SLURM job:
 
