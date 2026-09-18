@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=04:00:00
-#SBATCH --output=/scratch/users/%u/code-analyzer-gradio-%j.out
-#SBATCH --error=/scratch/users/%u/code-analyzer-gradio-%j.err
+#SBATCH --output=/scratch/users/%u/mambapy-gradio-%j.out
+#SBATCH --error=/scratch/users/%u/mambapy-gradio-%j.err
 
 export PYTHONNOUSERSITE=1
 
@@ -19,49 +19,46 @@ echo "========================================"
 echo "Unified Code Analyzer - Gradio"
 echo "========================================"
 
+# --------------------------------------------------
+
 echo
 echo "Compute node:"
 hostname
 
-# --------------------------------------------------
-# Check GPU
+echo
+echo "Slurm job information:"
+echo "Job ID          : $SLURM_JOB_ID"
+echo "Node            : $SLURMD_NODENAME"
+echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-not-set}"
+
 # --------------------------------------------------
 
 echo
 echo "Checking GPU..."
 
 if ! nvidia-smi >/dev/null 2>&1; then
-
     echo
     echo "ERROR: No GPU is available on this node."
     echo "The job will not continue."
     echo
-
     exit 1
 fi
 
 echo
-echo "GPU available:"
-nvidia-smi --query-gpu=name,memory.total --format=csv
+echo "Allocated GPU:"
+nvidia-smi --query-gpu=index,name,memory.total,memory.free --format=csv
 
 # --------------------------------------------------
-# Load CUDA
-# --------------------------------------------------
-
 echo
 echo "Loading CUDA..."
 module load cuda
 
-# --------------------------------------------------
-# Project
 # --------------------------------------------------
 
 cd "$HOME/Code-Analyzer"
 
 source .venv/bin/activate
 
-# --------------------------------------------------
-# Python
 # --------------------------------------------------
 
 echo
@@ -73,18 +70,18 @@ echo "Python executable:"
 which python
 
 # --------------------------------------------------
-# PyTorch / CUDA check
-# --------------------------------------------------
 
 echo
 echo "Checking PyTorch CUDA..."
 
 python -c "
 import torch
+import os
 
 print('PyTorch:', torch.__version__)
 print('CUDA available:', torch.cuda.is_available())
 print('CUDA version:', torch.version.cuda)
+print('CUDA_VISIBLE_DEVICES:', os.environ.get('CUDA_VISIBLE_DEVICES'))
 
 if not torch.cuda.is_available():
     print()
@@ -92,13 +89,14 @@ if not torch.cuda.is_available():
     print('The job will not continue.')
     raise SystemExit(1)
 
-print('GPU:', torch.cuda.get_device_name(0))
+print('GPU count visible to PyTorch:', torch.cuda.device_count())
+
+for i in range(torch.cuda.device_count()):
+    print(f'GPU {i}:', torch.cuda.get_device_name(i))
+    print(f'GPU {i} BF16 supported:', torch.cuda.is_bf16_supported(i))
 "
 
 # --------------------------------------------------
-# Gradio port
-# --------------------------------------------------
-
 export GRADIO_SERVER_PORT=7860
 
 echo
@@ -123,9 +121,10 @@ echo "Then open:"
 echo
 echo "http://localhost:7860"
 echo
-
+###############
+NODE=$(hostname)
+echo "$NODE"
+###############
 # --------------------------------------------------
-# Start application
-# --------------------------------------------------
-
 python app.py
+# --------------------------------------------------
