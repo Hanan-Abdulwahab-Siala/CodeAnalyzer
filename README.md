@@ -225,4 +225,4 @@ MIT License
 
 hanan.siala@kcl.ac.uk &nbsp;&nbsp;&nbsp;&nbsp; kevin.lano@kcl.ac.uk
 
-Code Analyzer project.
+King's College London
