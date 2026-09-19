@@ -137,15 +137,8 @@ python app.py
 ```
 ---
 
-#### 7. Get HostName and Open Gradio
-Now go to your Windows PC and open a second CMD window. Now we want to check GPU jobs by using the following command:
-
-```bash
-ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -u k12345 -h -t RUNNING -o %%N"
-```
-We got, for example:
-37241627 → erc-hpc-comp036
-37241508 → erc-hpc-comp035
+#### 7. Open a Second CMD Window
+Now go to your Windows PC and open a second CMD window. 
 
 If your Gradio is running in job 37241627, do:
 ```bash
@@ -156,18 +149,6 @@ or
 for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241627 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
 
 ```
-If Gradio is running in job 37241508, do:
-
-```bash
-for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j Jupyter Lab 37241508 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
-
-or
-
-for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241508 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
-```
-
-Instead, you can use the same number that appears when you request a GPU job. I mentioned this earlier when you ran the `srun` command.
-
 ---
 
 #### 8. Windows: Open the Browser
