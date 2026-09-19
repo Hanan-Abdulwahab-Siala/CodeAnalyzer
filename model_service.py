@@ -183,9 +183,7 @@ def load_model(language, task, version, model_type, model_family="Mistral"):
                 model_type=model_type,
             )
         else:
-            raise ValueError(
-                f"Unsupported model family: {model_family}"
-            )
+            raise ValueError(f"Unsupported model family: {model_family}")
         MODEL = model
         TOKENIZER = tokenizer
         MODEL_INFO = {
@@ -298,9 +296,7 @@ def generate_prompt(language, task, content, model_family="Mistral"):
 # ------------------------------------------------------------
 def _generate_mistral_inference(content, return_metrics=False):
     if MODEL is None or TOKENIZER is None:
-        raise RuntimeError(
-            "No model is loaded."
-        )
+        raise RuntimeError("No model is loaded.")
     start_time = time.time()
     language = MODEL_INFO["language"]
     task = MODEL_INFO["task"]
@@ -332,9 +328,7 @@ def _generate_mistral_inference(content, return_metrics=False):
         )
         if output_p:
             output_text = output_p[0]
-            split_text = output_text.split(
-                "Response:"
-            )
+            split_text = output_text.split("Response:")
             if len(split_text) > 1:
                 raw_output = split_text[1].strip()
             else:
@@ -343,10 +337,7 @@ def _generate_mistral_inference(content, return_metrics=False):
             raw_output = None
     inference_time = time.time() - start_time
     if outputs is not None:
-        generated_tokens = max(
-            0,
-            outputs.shape[1] - input_tokens,
-        )
+        generated_tokens = max(0, outputs.shape[1] - input_tokens)
     else:
         generated_tokens = 0
 # ------------------------------------------------------------
@@ -367,9 +358,7 @@ def _generate_mistral_inference(content, return_metrics=False):
 # ------------------------------------------------------------
 def _generate_deepseek_inference(content, return_metrics=False):
     if MODEL is None or TOKENIZER is None:
-        raise RuntimeError(
-            "No model is loaded."
-        )
+        raise RuntimeError("No model is loaded.")
     start_time = time.time()
     language = MODEL_INFO["language"]
     prompt = _generate_deepseek_prompt(
@@ -417,13 +406,9 @@ def _generate_deepseek_inference(content, return_metrics=False):
 def generate_inference_output(content, return_metrics=False):
     with INFERENCE_LOCK:
         if MODEL is None:
-            raise RuntimeError(
-                "No model is loaded."
-            )
+            raise RuntimeError("No model is loaded.")
         if MODEL_INFO is None:
-            raise RuntimeError(
-                "Model information is unavailable."
-            )
+            raise RuntimeError("Model information is unavailable.")
         if MODEL_INFO["model_family"] == "DeepSeek":
             return _generate_deepseek_inference(
                 content=content,
@@ -437,9 +422,7 @@ def generate_inference_output(content, return_metrics=False):
 def _extract_mistral_dict(text):
     text = str(text)
     if "### Response:" in text:
-        text = text.split(
-            "### Response:"
-        )[-1].strip()
+        text = text.split("### Response:")[-1].strip()
     else:
         text = text.strip()
     match = re.search(
@@ -447,9 +430,7 @@ def _extract_mistral_dict(text):
         text,
     )
     if not match:
-        raise ValueError(
-            "No dict found"
-        )
+        raise ValueError("No dict found")
     candidate = match.group(1)
     return ast.literal_eval(candidate)
 # ------------------------------------------------------------
@@ -460,12 +441,8 @@ def _clean_deepseek_text(text):
 # ------------------------------------------------------------
 def _extract_deepseek_dict(text):
     if not text:
-        raise ValueError(
-            "Empty DeepSeek output"
-        )
-    text = _clean_deepseek_text(
-        text
-    )
+        raise ValueError("Empty DeepSeek output")
+    text = _clean_deepseek_text(text)
     flaws = re.findall(
         r'"Flaw"\s*:\s*"([^"]+)"',
         text,
@@ -491,28 +468,16 @@ def _extract_deepseek_dict(text):
     )
     if refactored:
         cleaned_code = refactored.group(1)
-        cleaned_code = cleaned_code.replace(
-            '\\"',
-            '"',
-        )
-        cleaned_code = cleaned_code.replace(
-            "\\n",
-            "\n",
-        )
-        result["Refactored Versions"] = (
-            cleaned_code
-        )
+        cleaned_code = cleaned_code.replace('\\"', '"')
+        cleaned_code = cleaned_code.replace("\\n", "\n")
+        result["Refactored Versions"] = (cleaned_code)
     elif not result["Flaws"]:
-        raise ValueError(
-            "Invalid DeepSeek output"
-        )
+        raise ValueError("Invalid DeepSeek output")
     return result
 # ------------------------------------------------------------
 def extract_clean_dict(text):
     if MODEL_INFO is None:
-        raise RuntimeError(
-            "No model information is available."
-        )
+        raise RuntimeError("No model information is available.")
     if MODEL_INFO["model_family"] == "DeepSeek":
         return _extract_deepseek_dict(text)
     return _extract_mistral_dict(text)
@@ -533,18 +498,10 @@ def format_output(output_dict):
         if isinstance(entry, dict):
             flaw = entry.get("Flaw", "")
             explanation = entry.get("Explanation", "")
-            output_lines.append(
-                f"   - {flaw}: {explanation}"
-            )
+            output_lines.append(f"   - {flaw}: {explanation}")
         else:
-            output_lines.append(
-                f"   - {entry}"
-            )
-    if (
-        MODEL_INFO["model_family"] == "Mistral"
-        and MODEL_INFO["language"] == "Python"
-        and MODEL_INFO["task"] == "Flaw Detection"
-    ):
+            output_lines.append(f"   - {entry}")
+    if (MODEL_INFO["model_family"] == "Mistral" and MODEL_INFO["language"] == "Python" and MODEL_INFO["task"] == "Flaw Detection"):
         output_lines.append("")
         output_lines.append("Corrected code recommendation:")
         output_lines.append("")
@@ -552,10 +509,7 @@ def format_output(output_dict):
         if isinstance(corrections, list) and corrections:
             for item in corrections:
                 if isinstance(item, dict):
-                    code = item.get(
-                        "Correction",
-                        ""
-                    )
+                    code = item.get("Correction", "")
                     if code:
                         output_lines.append(str(code))
                         output_lines.append("")
