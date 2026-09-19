@@ -64,10 +64,7 @@ def _load_mistral(language, task, version, model_type):
         model_type,
     )
     if key not in MISTRAL_CHECKPOINTS:
-        raise ValueError(
-            "No Mistral checkpoint configured for: "
-            f"{key}"
-        )
+        raise ValueError(f"No Mistral checkpoint configured for: {key}")
     checkpoint = MISTRAL_CHECKPOINTS[key]
     tokenizer = AutoTokenizer.from_pretrained(
         MISTRAL_BASE_MODEL,
@@ -107,10 +104,7 @@ def _load_deepseek(language, version, model_type):
         model_type,
     )
     if key not in DEEPSEEK_CHECKPOINTS:
-        raise ValueError(
-            "No DeepSeek checkpoint configured for: "
-            f"{key}"
-        )
+        raise ValueError(f"No DeepSeek checkpoint configured for: {key}")
     checkpoint = DEEPSEEK_CHECKPOINTS[key]
 # ------------------------------------------------------------
     if model_type == "LoRA Adapter":
@@ -425,10 +419,7 @@ def _extract_mistral_dict(text):
         text = text.split("### Response:")[-1].strip()
     else:
         text = text.strip()
-    match = re.search(
-        r"(\{'Flaws'[\s\S]*\})",
-        text,
-    )
+    match = re.search(r"(\{'Flaws'[\s\S]*\})", text)
     if not match:
         raise ValueError("No dict found")
     candidate = match.group(1)
@@ -443,14 +434,8 @@ def _extract_deepseek_dict(text):
     if not text:
         raise ValueError("Empty DeepSeek output")
     text = _clean_deepseek_text(text)
-    flaws = re.findall(
-        r'"Flaw"\s*:\s*"([^"]+)"',
-        text,
-    )
-    explanations = re.findall(
-        r'"Explanation"\s*:\s*"([^"]+)"',
-        text,
-    )
+    flaws = re.findall(r'"Flaw"\s*:\s*"([^"]+)"', text)
+    explanations = re.findall(r'"Explanation"\s*:\s*"([^"]+)"', text)
     result = {
         "Flaws": [],
         "Refactored Versions": "",
@@ -462,10 +447,7 @@ def _extract_deepseek_dict(text):
                 "Explanation": explanations[i],
             }
         )
-    refactored = re.search(
-        r'"Refactored Versions"\s*:\s*"([\s\S]+)"',
-        text,
-    )
+    refactored = re.search(r'"Refactored Versions"\s*:\s*"([\s\S]+)"', text)
     if refactored:
         cleaned_code = refactored.group(1)
         cleaned_code = cleaned_code.replace('\\"', '"')
