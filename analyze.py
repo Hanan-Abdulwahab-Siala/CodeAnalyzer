@@ -31,9 +31,7 @@ def format_time(seconds):
 # ------------------------------------------------------------
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description=(
-            "Unified Mamba and Python Code Analyzer."
-        )
+        description=("Unified Mamba and Python Code Analyzer.")
     )
     parser.add_argument(
         "input_file",
@@ -41,10 +39,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--model-family",
-        choices=[
-            "Mistral",
-            "DeepSeek",
-        ],
+        choices=["Mistral", "DeepSeek"],
         default=DEFAULT_MODEL_FAMILY,
         help=(
             "Model family: Mistral or DeepSeek. "
@@ -53,10 +48,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--language",
-        choices=[
-            "Mamba",
-            "Python",
-        ],
+        choices=["Mamba", "Python"],
         default=DEFAULT_LANGUAGE,
         help=(
             "Language to analyze: Mamba or Python. "
@@ -65,10 +57,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--task",
-        choices=[
-            "Flaw Detection",
-            "Refactoring",
-        ],
+        choices=["Flaw Detection", "Refactoring"],
         default=None,
         help=(
             "Python task. "
@@ -92,23 +81,16 @@ def parse_arguments():
     )
     parser.add_argument(
         "--model-type",
-        choices=[
-            "LoRA Adapter",
-            "Full Model",
-        ],
+        choices=["LoRA Adapter", "Full Model"],
         default=DEFAULT_MODEL_TYPE,
-        help=(
-            "Model type: LoRA Adapter or Full Model."
-        ),
+        help=("Model type: LoRA Adapter or Full Model."),
     )
     parser.add_argument(
         "--output-file",
         "--output",
         dest="output_file",
         default=OUTPUT_FILE,
-        help=(
-            f"Output file. Default: {OUTPUT_FILE}"
-        ),
+        help=(f"Output file. Default: {OUTPUT_FILE}"),
     )
     return parser.parse_args()
 # ------------------------------------------------------------
@@ -152,10 +134,7 @@ def main():
             if "." not in os.path.basename(input_file):
                 input_file += ".py"
             else:
-                print(
-                    "ERROR: Python input file must have "
-                    "a .py extension."
-                )
+                print("ERROR: Python input file must have a .py extension.")
                 raise SystemExit(1)
 # ------------------------------------------------------------
     print("=" * 70)
@@ -184,15 +163,9 @@ def main():
         print("ERROR: Could not read input file.")
         print(f"Reason: {e}")
         raise SystemExit(1)
-    print(
-        f"Input characters: {len(code)}",
-        flush=True,
-    )
+    print(f"Input characters: {len(code)}", flush=True)
 # ------------------------------------------------------------
-    print(
-        "Loading model...",
-        flush=True,
-    )
+    print("Loading model...", flush=True)
     try:
         load_model(
             language=language,
@@ -209,26 +182,13 @@ def main():
         print("ERROR: Model was not loaded.")
         raise SystemExit(1)
     loaded_info = get_loaded_model_info()
-    print(
-        "Model loaded successfully.",
-        flush=True,
-    )
+    print("Model loaded successfully.", flush=True)
     if loaded_info:
-        print(
-            f"Checkpoint: "
-            f"{loaded_info['checkpoint']}",
-            flush=True,
-        )
+        print(f"Checkpoint: " f"{loaded_info['checkpoint']}", flush=True)
 # ------------------------------------------------------------
     print()
-    print(
-        "Starting inference...",
-        flush=True,
-    )
-    print(
-        "Maximum new tokens: 32768",
-        flush=True,
-    )
+    print("Starting inference...", flush=True)
+    print("Maximum new tokens: 32768", flush=True)
     try:
         (
             output,
@@ -253,22 +213,13 @@ def main():
         output_directory = os.path.dirname(output_file)
         if not output_directory:
             output_directory = "."
-        os.makedirs(
-            output_directory,
-            exist_ok=True,
-        )
-        raw_file = os.path.join(
-            output_directory,
-            "raw_output.txt",
-        )
+        os.makedirs(output_directory, exist_ok=True)
+        raw_file = os.path.join(output_directory, "raw_output.txt")
         try:
             with open(raw_file, "w", encoding="utf-8") as file:
                 file.write(str(output))
         except Exception as write_error:
-            print(
-                "WARNING: Could not save raw "
-                "model output."
-            )
+            print("WARNING: Could not save raw model output.)
             print(f"Reason: {write_error}")
         print("ERROR: Could not parse model output.")
         print(f"Reason: {e}")
