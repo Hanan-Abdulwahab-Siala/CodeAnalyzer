@@ -117,11 +117,7 @@ def task_changed(model_family, language, task, model_version, model_type):
             value="1",
             interactive=False,
         )
-    elif (
-        model_family == "Mistral"
-        and language == "Python"
-        and task == "Refactoring"
-    ):
+    elif (model_family == "Mistral" and language == "Python" and task == "Refactoring"):
         version_update = gr.update(
             choices=["1"],
             value="1",
@@ -269,13 +265,8 @@ def clear_program():
     )
 # ------------------------------------------------------------
 with gr.Blocks(title="Unified Code Analyzer") as app:
-    gr.Markdown(
-        "# Unified Code Analyzer"
-    )
-    gr.Markdown(
-        "Select the model configuration, press "
-        "**Load Model**, then analyze your code."
-    )
+    gr.Markdown("# Unified Code Analyzer")
+    gr.Markdown("Select the model configuration, press **Load Model**, then analyze your code.")
     with gr.Row():
         model_family = gr.Dropdown(
             label="Model",
@@ -333,10 +324,7 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
     )
     code_input = gr.Textbox(
         label="Program",
-        placeholder=(
-            "Paste your code here or select a program file "
-            "above. You can modify the code before Analyze."
-        ),
+        placeholder="Paste your code here or select a program file above. You can modify the code before Analyze.",
         lines=16,
         max_lines=30,
         interactive=True,
