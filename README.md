@@ -223,6 +223,6 @@ MIT License
 
 ## Contact
 
-hanan.siala@kcl.ac.uk               kevin.lano@kcl.ac.uk
+hanan.siala@kcl.ac.uk &nbsp;&nbsp;&nbsp;&nbsp; kevin.lano@kcl.ac.uk
 
 Code Analyzer project.
