@@ -115,7 +115,7 @@ Your JOBID will be different each time you submit a new job.
 ---
 #### 6. Open the Tunnel Automatically
 
-Open **PowerShell** or **Command Prompt**.
+Open another **PowerShell** or **Command Prompt**.
 
 You should see a prompt similar to:
 
