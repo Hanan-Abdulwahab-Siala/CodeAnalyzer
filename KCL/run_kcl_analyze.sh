@@ -56,7 +56,7 @@ module load cuda
 
 cd "$HOME/Code-Analyzer"
 
-source .venv/bin/activate
+source ~/venvs/bin/activate
 
 # --------------------------------------------------
 # Python
