@@ -219,7 +219,7 @@ def main():
             with open(raw_file, "w", encoding="utf-8") as file:
                 file.write(str(output))
         except Exception as write_error:
-            print("WARNING: Could not save raw model output.)
+            print("WARNING: Could not save raw model output.")
             print(f"Reason: {write_error}")
         print("ERROR: Could not parse model output.")
         print(f"Reason: {e}")
