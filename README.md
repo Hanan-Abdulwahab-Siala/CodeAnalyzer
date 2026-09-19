@@ -211,9 +211,7 @@ Please review the applicable model licenses and terms before redistributing mode
 
 ## Credits
 
-| Student | Supervisor |
-|---|---|
-| Hanan Abdulwahab Siala | Kevin Lano |
+**Student:** Hanan Abdulwahab Siala &nbsp;&nbsp;&nbsp;&nbsp; **Supervisor:** Kevin Lano
 
 ---
 
