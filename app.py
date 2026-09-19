@@ -39,10 +39,7 @@ def _configuration_values(model_family, language, task, model_version):
             value="1",
             interactive=False,
         )
-        return (
-            task_update,
-            version_update,
-        )
+        return (task_update, version_update)
     if language == "Mamba":
         task_update = gr.update(
             choices=["Flaws + Refactoring"],
@@ -51,27 +48,13 @@ def _configuration_values(model_family, language, task, model_version):
         )
         version_update = gr.update(
             choices=["1", "2"],
-            value=(
-                str(model_version)
-                if str(model_version) in {"1", "2"}
-                else "2"
-            ),
+            value=(str(model_version) if str(model_version) in {"1", "2"} else "2"),
             interactive=True,
         )
-        return (
-            task_update,
-            version_update,
-        )
+        return (task_update, version_update)
 # ------------------------------------------------------------
-    task_choices = [
-        "Flaw Detection",
-        "Refactoring",
-    ]
-    selected_task = (
-        task
-        if task in task_choices
-        else "Flaw Detection"
-    )
+    task_choices = ["Flaw Detection", "Refactoring"]
+    selected_task = (task if task in task_choices else "Flaw Detection")
     if selected_task == "Refactoring":
         version_update = gr.update(
             choices=["1"],
@@ -81,11 +64,7 @@ def _configuration_values(model_family, language, task, model_version):
     else:
         version_update = gr.update(
             choices=["1", "2"],
-            value=(
-                str(model_version)
-                if str(model_version) in {"1", "2"}
-                else "2"
-            ),
+            value=(str(model_version) if str(model_version) in {"1", "2"} else "2"),
             interactive=True,
         )
     task_update = gr.update(
@@ -93,10 +72,7 @@ def _configuration_values(model_family, language, task, model_version):
         value=selected_task,
         interactive=True,
     )
-    return (
-        task_update,
-        version_update,
-    )
+    return (task_update, version_update)
 # ------------------------------------------------------------
 def configuration_changed(model_family, language, task, model_version, model_type):
     unload_model()
@@ -154,11 +130,7 @@ def task_changed(model_family, language, task, model_version, model_type):
     else:
         version_update = gr.update(
             choices=["1", "2"],
-            value=(
-                str(model_version)
-                if str(model_version) in {"1", "2"}
-                else "2"
-            ),
+            value=(str(model_version) if str(model_version) in {"1", "2"} else "2"),
             interactive=True,
         )
     return (
@@ -194,10 +166,7 @@ def load_selected_model(model_family, language, task, model_version, model_type)
             model_version = 1
         elif language == "Mamba":
             task = "Flaws + Refactoring"
-        elif (
-            language == "Python"
-            and task == "Refactoring"
-        ):
+        elif (language == "Python" and task == "Refactoring"):
             model_version = 1
         info = load_model(
             language=language,
@@ -254,10 +223,7 @@ def analyze_code(code, language, task):
                 "Please press Load Model."
             )
         if info["model_family"] == "Mistral":
-            if (
-                language == "Python"
-                and info["task"] != task
-            ):
+            if (language == "Python" and info["task"] != task):
                 return (
                     "ERROR: The selected task does not "
                     "match the loaded model.\n\n"
@@ -272,9 +238,7 @@ def analyze_code(code, language, task):
             inference_time,
         ) = generate_inference_output(code, return_metrics=True)
         if raw_output is None or not str(raw_output).strip():
-            return (
-                "ERROR: Model returned empty output."
-            )
+            return ("ERROR: Model returned empty output.")
         output_dict = extract_clean_dict(raw_output)
         final_output = format_output(output_dict)
         final_output = append_inference_metrics(
