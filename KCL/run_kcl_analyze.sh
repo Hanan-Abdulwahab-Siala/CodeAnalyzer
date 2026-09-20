@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-#SBATCH --job-name=mamba-analyzer
+#SBATCH --job-name=mambapy-analyzer
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
