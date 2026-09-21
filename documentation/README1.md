@@ -142,12 +142,27 @@ Now go to your Windows PC and open a second CMD window.
 
 If your Gradio is running in job 37241627, do:
 ```bash
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 USER@HPC_HOST "squeue -n JOB_NAME -h -o %%N"') do ssh -m hmac-sha2-512 -N -L LOCAL_PORT:%N:REMOTE_PORT USER@HPC_HOST
+
+or
+
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 USER@HPC_HOST "squeue -j JOB_ID -h -o %%N"') do ssh -m hmac-sha2-512 -N -L LOCAL_PORT:%N:REMOTE_PORT USER@HPC_HOST
+```
+Where:
+ -  USER → your HPC username
+ - HPC_HOST → your HPC login host
+ - JOB_NAME → your Slurm job name
+ - LOCAL_PORT → local port, e.g. 7860
+ - REMOTE_PORT → application port, e.g. 7860
+ - JOB_ID → the Slurm job ID, e.g. 12345678
+
+For example:
+```bash
 for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j Jupyter Lab 37241627 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
 
 or
 
 for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37241627 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
-
 ```
 ---
 
