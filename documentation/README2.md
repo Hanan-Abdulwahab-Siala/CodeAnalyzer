@@ -4,16 +4,32 @@ Please follow these instructions:
 
 #### 1. Connect to the GPU Provider
 
-From your local computer, connect to the remote server, for example:
+From your local computer, connect to the remote GPU/HPC server using SSH. For example:
 
 ```bash
-ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk
+ssh -m hmac-sha2-512 USERNAME@HPC_HOST
 ```
-After connecting, you should see a shell prompt on the HPC login node:
+
+Replace:
+
+- USERNAME with your account username on the HPC/GPU provider.
+- HPC_HOST with the hostname of the remote HPC/GPU server.
+
+After connecting successfully, you should see a shell prompt on the HPC login node, similar to:
+
 ```bash
-k12345@arc-hpc-login3:~$
+USERNAME@HPC_LOGIN_NODE:~$
 ```
+
+For example, if your provider gives you the username `k12345` and the login hostname `hpc.example.org`:
+
+```bash
+ssh -m hmac-sha2-512 k12345@hpc.example.org
+```
+
+> **Note:** You must have an account and SSH access to the HPC/GPU provider before running this command. The hostname, username, authentication method, and SSH options may differ between providers.
 ---
+
 #### 2. Go to the Project Directory
 
 Move into the Code Analyzer project:
