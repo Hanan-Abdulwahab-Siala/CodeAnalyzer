@@ -22,8 +22,8 @@ ssh -m hmac-sha2-512 USERNAME@HPC_HOST
 
 Replace:
 
-* `USERNAME` with your account username on the HPC/GPU provider.
-* `HPC_HOST` with the hostname of the remote HPC/GPU server.
+- USERNAME with your account username on the HPC/GPU provider.
+- HPC_HOST with the hostname of the remote HPC/GPU server.
 
 After connecting successfully, you should see a shell prompt on the HPC login node, similar to:
 
