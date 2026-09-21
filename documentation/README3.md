@@ -115,27 +115,31 @@ Your JOBID will be different each time you submit a new job.
 ---
 #### 6. Open the Tunnel Automatically
 
-Open another **PowerShell** or **Command Prompt**.
-
-You should see a prompt similar to:
+Now go to your Windows PC and open a second CMD window, and put:
 
 ```bash
-C:\Users\PC>
-```
-
-Run:
-
-```powershell
-for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j Jupyter Lab 37243372 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 USER@HPC_HOST "squeue -n JOB_NAME -h -o %%N"') do ssh -m hmac-sha2-512 -N -L LOCAL_PORT:%N:REMOTE_PORT USER@HPC_HOST
 
 or
 
-for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 37243372 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
-
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 USER@HPC_HOST "squeue -j JOB_ID -h -o %%N"') do ssh -m hmac-sha2-512 -N -L LOCAL_PORT:%N:REMOTE_PORT USER@HPC_HOST
 ```
+Where:
+ -  USER → your HPC username
+ - HPC_HOST → your HPC login host
+ - JOB_NAME → your Slurm job name
+ - LOCAL_PORT → local port, e.g. 7860
+ - REMOTE_PORT → application port, e.g. 7860
+ - JOB_ID → the Slurm job ID, e.g. 12345678
 
-where 37243372 is a JOBID
+For example:
+```bash
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j Jupyter Lab 12345678 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
 
+or
+
+for /f "delims=" %N in ('ssh -m hmac-sha2-512 k12345@hpc.create.kcl.ac.uk "squeue -j 12345678 -h -o %%N"') do ssh -m hmac-sha2-512 -N -L 7860:%N:7860 k12345@hpc.create.kcl.ac.uk
+```
 ---
 
 #### 7. Open Gradio in Your Browser
