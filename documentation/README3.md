@@ -118,13 +118,13 @@ sbatch KCL/run_kcl_gradio.sh
 You should receive something similar to:
 
 ```
-Submitted batch job 37143242
+Submitted batch job 12345678
 ```
 
 The number is the **JOBID**. For example:
 
 ```
-JOBID=37143242
+JOBID=12345678
 ```
 
 Your JOBID will be different each time you submit a new job.
@@ -170,32 +170,5 @@ http://localhost:7860
 ```
 
 The Gradio interface should appear.
-
----
-#### 8. Stopping the Application
-
-When you are finished, cancel the SLURM job:
-
-```bash
-scancel JOBID
-```
-
-For example:
-
-```bash
-scancel 37143242
-```
-
-You can confirm that it has stopped with:
-
-```bash
-squeue -u $USER
-```
-
-Also, close the SSH tunnel on your local computer with:
-
-```text
-Ctrl + C
-```
 
 ---
