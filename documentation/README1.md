@@ -39,6 +39,8 @@ ssh -m hmac-sha2-512 k12345@hpc.example.org
 
 > **Note:** You must have an account and SSH access to the HPC/GPU provider before running this command. The hostname, username, authentication method, and SSH options may differ between providers.
 
+---
+
 #### 2. Go to the Project Directory
 
 Move into the Code Analyzer project:
