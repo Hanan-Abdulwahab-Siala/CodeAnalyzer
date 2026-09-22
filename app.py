@@ -15,6 +15,30 @@ MODEL_FAMILIES = ["Mistral", "DeepSeek"]
 LANGUAGES = ["Mamba", "Python"]
 MODEL_TYPES = ["LoRA Adapter", "Full Model"]
 # ------------------------------------------------------------
+def disable_analyze():
+   return gr.update(interactive=False)
+# ------------------------------------------------------------
+def program_input_changed(program_text):
+   if program_text and program_text.strip():
+      return gr.update(interactive=True)
+   else:
+      return gr.update(interactive=False)
+# ------------------------------------------------------------
+def enable_program_inputs():
+   return (
+      gr.update(interactive=True),   # Load Program File
+      gr.update(interactive=True),   # Java / Python Program
+   )
+# ------------------------------------------------------------
+def disable_program_inputs():
+   return (
+      gr.update(interactive=False),  # Load Program File
+      gr.update(interactive=False),  # Java / Python Program
+   )
+# ------------------------------------------------------------
+def clear_program_directory():
+   return gr.update(value="")
+# ------------------------------------------------------------
 def _loaded_model_text(info):
    if not info:
       return "No model loaded."
@@ -192,12 +216,15 @@ def load_selected_model(model_family, language, task, model_version, model_type)
 # ------------------------------------------------------------
 def load_program_file(file_path):
    if not file_path:
-      return ""
+      return "", gr.update(interactive=False)
    try:
       with open(file_path, "r", encoding="utf-8") as file:
-         return file.read()
+         code = file.read()
+      if code and code.strip():
+         return code, gr.update(interactive=True)
+      return "", gr.update(interactive=False)
    except Exception:
-      return ""
+      return "", gr.update(interactive=False)
 # ------------------------------------------------------------
 def analyze_code(code, language, task):
    if not is_model_loaded():
@@ -258,10 +285,13 @@ def analyze_code(code, language, task):
       )
 # ------------------------------------------------------------
 def clear_program():
+   return "", None, ""
+# ------------------------------------------------------------
+def reset_after_clear():
    return (
-      "",
-      None,
-      "",
+      gr.update(interactive=True),   # Load Program
+      gr.update(interactive=True),   # Program
+      gr.update(interactive=False),  # Analyze
    )
 # ------------------------------------------------------------
 with gr.Blocks(title="Unified Code Analyzer") as app:
@@ -321,18 +351,20 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          ".mamba",
       ],
       type="filepath",
+      interactive=False,
    )
    code_input = gr.Textbox(
       label="Program",
       placeholder="Paste your code here or select a program file above. You can modify the code before Analyze.",
       lines=16,
       max_lines=30,
-      interactive=True,
+      interactive=False,
    )
    with gr.Row():
       analyze_button = gr.Button(
          "Analyze",
          variant="primary",
+         interactive=False,
       )
       clear_button = gr.Button(
          "Clear",
@@ -347,11 +379,11 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
    model_family.change(
       fn=model_family_changed,
       inputs=[
-          model_family,
-          language,
-          task,
-          model_version,
-          model_type,
+         model_family,
+         language,
+         task,
+         model_version,
+         model_type,
       ],
       outputs=[
          task,
@@ -361,6 +393,17 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          output_box,
          model_status,
       ],
+   ).then(
+      fn=disable_program_inputs,
+      inputs=[],
+      outputs=[
+         program_file,
+         code_input,
+      ],
+   ).then(
+      fn=lambda: (gr.update(interactive=False)),
+      inputs=None,
+      outputs=[analyze_button],
    )
    language.change(
       fn=language_changed,
@@ -379,6 +422,17 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          output_box,
          model_status,
       ],
+   ).then(
+      fn=disable_program_inputs,
+      inputs=[],
+      outputs=[
+         program_file,
+         code_input,
+      ],
+   ).then(
+      fn=lambda: (gr.update(interactive=False)),
+      inputs=None,
+      outputs=[analyze_button],
    )
    task.change(
       fn=task_changed,
@@ -396,6 +450,17 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          output_box,
          model_status,
       ],
+   ).then(
+      fn=disable_program_inputs,
+      inputs=[],
+      outputs=[
+         program_file,
+         code_input,
+      ],
+   ).then(
+      fn=lambda: (gr.update(interactive=False)),
+      inputs=None,
+      outputs=[analyze_button],
    )
    model_version.change(
       fn=version_changed,
@@ -412,6 +477,17 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          output_box,
          model_status,
       ],
+   ).then(
+      fn=disable_program_inputs,
+      inputs=[],
+      outputs=[
+         program_file,
+         code_input,
+      ],
+   ).then(
+      fn=lambda: (gr.update(interactive=False)),
+      inputs=None,
+      outputs=[analyze_button],
    )
    model_type.change(
       fn=model_type_changed,
@@ -428,11 +504,25 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          output_box,
          model_status,
       ],
+   ).then(
+      fn=disable_program_inputs,
+      inputs=[],
+      outputs=[
+         program_file,
+         code_input,
+      ],
+   ).then(
+      fn=lambda: (gr.update(interactive=False)),
+      inputs=None,
+      outputs=[analyze_button],
    )
    program_file.change(
       fn=load_program_file,
       inputs=program_file,
-      outputs=code_input,
+      outputs=[
+         code_input,
+         analyze_button,
+      ],
    )
    load_button.click(
       fn=load_selected_model,
@@ -448,16 +538,18 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          code_input,
          program_file,
          output_box,
-      ],
-   )
-   analyze_button.click(
-      fn=analyze_code,
-      inputs=[
+     ],
+   ).then(
+      fn=enable_program_inputs,
+      inputs=[],
+      outputs=[
+         program_file,
          code_input,
-         language,
-         task,
       ],
-      outputs=output_box,
+   ).then(
+      fn=lambda: gr.update(interactive=False),
+      inputs=[],
+      outputs=analyze_button,
    )
    clear_button.click(
       fn=clear_program,
@@ -467,6 +559,40 @@ with gr.Blocks(title="Unified Code Analyzer") as app:
          program_file,
          output_box,
       ],
+   ).then(
+      fn=reset_after_clear,
+      inputs=[],
+      outputs=[
+         program_file,
+         code_input,
+         analyze_button,
+      ],
+   )
+   code_input.input(
+      fn=program_input_changed,
+      inputs=[code_input],
+      outputs=[analyze_button],
+   )
+   analyze_button.click(
+      fn=disable_analyze,
+      inputs=[],
+      outputs=[analyze_button],
+      queue=False,
+   ).then(
+      fn=analyze_code,
+      inputs=[
+         code_input,
+         language,
+         task,
+      ],
+      outputs=output_box,
+   ).then(
+      fn=disable_program_inputs,
+      inputs=[],
+      outputs=[
+         program_file,
+         code_input,
+     ],
    )
 # ------------------------------------------------------------
 if __name__ == "__main__":
