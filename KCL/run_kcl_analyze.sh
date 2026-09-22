@@ -31,11 +31,11 @@ echo
 echo "Checking GPU..."
 
 if ! nvidia-smi >/dev/null 2>&1; then
-    echo
-    echo "ERROR: No GPU is available on this node."
-    echo "The job will not continue."
-    echo
-    exit 1
+   echo
+   echo "ERROR: No GPU is available on this node."
+   echo "The job will not continue."
+   echo
+   exit 1
 fi
 
 echo
@@ -85,10 +85,10 @@ print('CUDA available:', torch.cuda.is_available())
 print('CUDA version:', torch.version.cuda)
 
 if not torch.cuda.is_available():
-    print()
-    print('ERROR: PyTorch cannot access the allocated GPU.')
-    print('The job will not continue.')
-    raise SystemExit(1)
+   print()
+   print('ERROR: PyTorch cannot access the allocated GPU.')
+   print('The job will not continue.')
+   raise SystemExit(1)
 
 print('GPU:', torch.cuda.get_device_name(0))
 "
