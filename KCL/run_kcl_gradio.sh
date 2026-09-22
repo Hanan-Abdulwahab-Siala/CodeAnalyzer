@@ -37,11 +37,11 @@ echo
 echo "Checking GPU..."
 
 if ! nvidia-smi >/dev/null 2>&1; then
-    echo
-    echo "ERROR: No GPU is available on this node."
-    echo "The job will not continue."
-    echo
-    exit 1
+   echo
+   echo "ERROR: No GPU is available on this node."
+   echo "The job will not continue."
+   echo
+   exit 1
 fi
 
 echo
@@ -83,16 +83,16 @@ print('CUDA version:', torch.version.cuda)
 print('CUDA_VISIBLE_DEVICES:', os.environ.get('CUDA_VISIBLE_DEVICES'))
 
 if not torch.cuda.is_available():
-    print()
-    print('ERROR: PyTorch cannot access the allocated GPU.')
-    print('The job will not continue.')
-    raise SystemExit(1)
+   print()
+   print('ERROR: PyTorch cannot access the allocated GPU.')
+   print('The job will not continue.')
+   raise SystemExit(1)
 
 print('GPU count visible to PyTorch:', torch.cuda.device_count())
 
 for i in range(torch.cuda.device_count()):
-    print(f'GPU {i}:', torch.cuda.get_device_name(i))
-    print(f'GPU {i} BF16 supported:', torch.cuda.is_bf16_supported(i))
+   print(f'GPU {i}:', torch.cuda.get_device_name(i))
+   print(f'GPU {i} BF16 supported:', torch.cuda.is_bf16_supported(i))
 "
 
 # --------------------------------------------------
