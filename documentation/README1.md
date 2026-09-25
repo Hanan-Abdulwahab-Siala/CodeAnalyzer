@@ -5,7 +5,7 @@ The Gradio interface can be used to:
 - Select the model version
 - Select LoRA or full model
 - Enter Mamba/Python code
-- Run the analyze
+- Run the analyze program
 - View detected flaws
 - View refactored versions
 - View inference information
